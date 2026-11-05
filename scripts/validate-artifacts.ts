@@ -302,14 +302,26 @@ try {
     cdp = await context.newCDPSession(page);
   const framesDir = join(temp, "frames");
   await mkdir(framesDir);
-  cdp.on("Page.screencastFrame", (event) => {
+  const acknowledgements: Promise<void>[] = [],
+    acknowledgementErrors: unknown[] = [];
+  let recordingStopped = false;
+  const onFrame = (event: { data: string; sessionId: number }) => {
+    if (recordingStopped) return;
     const index = frames.length,
       path = join(framesDir, String(index).padStart(5, "0") + ".jpg");
     frames.push(path);
     timestamps.push(Date.now());
     writes.push(writeFile(path, Buffer.from(event.data, "base64")));
-    void cdp.send("Page.screencastFrameAck", { sessionId: event.sessionId });
-  });
+    acknowledgements.push(
+      cdp.send("Page.screencastFrameAck", { sessionId: event.sessionId }).then(
+        () => {},
+        (error) => {
+          acknowledgementErrors.push(error);
+        },
+      ),
+    );
+  };
+  cdp.on("Page.screencastFrame", onFrame);
   await cdp.send("Page.startScreencast", {
     format: "jpeg",
     quality: 85,
@@ -367,7 +379,11 @@ try {
   });
   await page.waitForTimeout(2000);
   await page.screenshot({ path: join(out, "03-write-protection.png") });
+  recordingStopped = true;
   await cdp.send("Page.stopScreencast");
+  cdp.off("Page.screencastFrame", onFrame);
+  await Promise.all(acknowledgements);
+  if (acknowledgementErrors.length) throw acknowledgementErrors[0];
   await Promise.all(writes);
   await context.close();
   await browser.close();
