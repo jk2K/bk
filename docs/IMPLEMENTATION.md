@@ -36,3 +36,9 @@
 自动测试覆盖配置约束、输出符号链接、进程锁、SQLite 回滚与中断恢复、真实 Git 增量/强推、原文证据校验、业务意图冲突降级、干运行、失败重试和隔离提案。Provider 测试模拟三类平台及旧版 tea 的正常与重复创建流程。Mermaid 使用实际解析器测试合法与非法示例。
 
 浏览器路径已使用真实 Chromium 和本地 HTTP fixture 验证，CI 也要求安装 Chromium 后实际运行。SDK 与多模态测试使用可替换测试适配器；完整验收仍需企业批准的 Claude 模型、复杂企业登录页及三类 Git 平台的真实 CLI 联调。
+
+## 已留存的验证证据
+
+基线报告见 [2026-11-05 验证报告](validation/2026-11-05/REPORT.md)，包含 42 项测试的逐项日志、JUnit、原始 TAP、真实 Git 提案补丁、3 张截图和真实 Chromium 录屏。测试替身、合成数据与未完成的实机验收均在报告中明确标注。
+
+后续通过 `npm run validate:artifacts` 自动生成同类产物，CI 每次上传完整 Artifact。[剩余工作与验收门槛](VALIDATION-GAPS.md) 作为试点和发布前的检查依据。

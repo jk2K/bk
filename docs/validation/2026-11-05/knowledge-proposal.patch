@@ -1,0 +1,40 @@
+diff --git a/indexes/proposal-b941d84507634c0b8c06bfa8.json b/indexes/proposal-b941d84507634c0b8c06bfa8.json
+new file mode 100644
+index 0000000..e2f9425
+--- /dev/null
++++ b/indexes/proposal-b941d84507634c0b8c06bfa8.json
+@@ -0,0 +1,9 @@
++{
++  "changeId": "e44cde56dfdc3ca35181601d5cdfa7d878748e6c124555862d151c595741fae0",
++  "source": "pricing-prd",
++  "revision": "82e9bd001ca2b4c53b595fcddbba60ce54b82a50",
++  "rules": [
++    "PROMO-PRICE-LOCK-001"
++  ],
++  "report": []
++}
+diff --git a/knowledge/marketing/PROMO-PRICE-LOCK-001.md b/knowledge/marketing/PROMO-PRICE-LOCK-001.md
+index 4b3d179..8469c61 100644
+--- a/knowledge/marketing/PROMO-PRICE-LOCK-001.md
++++ b/knowledge/marketing/PROMO-PRICE-LOCK-001.md
+@@ -8,15 +8,15 @@ sources:
+   - source_id: pricing-prd
+     kind: requirement
+     locator: pricing.md
+-    revision: f3c418a16a9803df1a28f31c22c3ef2247d3d59e
+-    content_hash: 2de93ede5e989b84926225efe2c106c550e5bc191556cff98b508ef873b84858
+-    quote: Merchant prices remain locked until withdrawal.
++    revision: 82e9bd001ca2b4c53b595fcddbba60ce54b82a50
++    content_hash: d45e5282ca9a000bf616a87a873e4cabf034025109832742cae0022e68bf4cac
++    quote: Merchant prices remain locked until withdrawal or approved rejection.
+ related_rules: []
+-last_verified_at: 2026-11-05T06:18:18.933Z
++last_verified_at: 2026-11-05T06:18:19.335Z
+ ---
+ 
+ # Price lock release conditions
+ 
+ <!-- bk:statement -->
+-Merchant prices remain locked until withdrawal.
++Merchant prices remain locked until withdrawal or approved rejection.
+ <!-- /bk:statement -->

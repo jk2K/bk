@@ -63,23 +63,7 @@ export async function withBrowser<T>(
         serviceWorkers: "block",
       },
     );
-    if (!headed)
-      await ctx.route("**/*", async (route) => {
-        const req = route.request();
-        try {
-          const u = allowed(req.url(), s);
-          if (
-            req.isNavigationRequest() &&
-            !matches(u.pathname, s.crawl.include, s.crawl.exclude)
-          )
-            throw new Error("Navigation outside source scope");
-          if (!["GET", "HEAD", "OPTIONS"].includes(req.method()))
-            throw new Error("Write request blocked");
-          await route.continue();
-        } catch {
-          await route.abort();
-        }
-      });
+    if (!headed) await installReadonlyPolicy(ctx, s);
     return await fn(ctx);
   } finally {
     await ctx?.close().catch(() => {});
@@ -98,4 +82,23 @@ export async function browserLogin(root: string, s: WebSource) {
     },
     true,
   );
+}
+
+export async function installReadonlyPolicy(ctx: BrowserContext, s: WebSource) {
+  await ctx.route("**/*", async (route) => {
+    const req = route.request();
+    try {
+      const u = allowed(req.url(), s);
+      if (
+        req.isNavigationRequest() &&
+        !matches(u.pathname, s.crawl.include, s.crawl.exclude)
+      )
+        throw new Error("Navigation outside source scope");
+      if (!["GET", "HEAD", "OPTIONS"].includes(req.method()))
+        throw new Error("Write request blocked");
+      await route.continue();
+    } catch {
+      await route.abort();
+    }
+  });
 }

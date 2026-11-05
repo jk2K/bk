@@ -1,0 +1,51 @@
+{
+  "model": "deterministic fixture adapter (not Claude)",
+  "imported": {
+    "failed": false,
+    "results": [
+      {
+        "source": "pricing-prd",
+        "status": "queued",
+        "files": 1
+      },
+      {
+        "change": "62806fe66b48019710fe3499c0f7f0c1b3741a02968c920b47701e2205e92dfc",
+        "status": "local",
+        "id": "57cc8136bc17aa5de3ae82b1",
+        "reportPath": "/tmp/bk-validation-KzO68Z/knowledge/.bk/proposals/57cc8136bc17aa5de3ae82b1/report.md"
+      }
+    ]
+  },
+  "unchanged": {
+    "failed": false,
+    "results": [
+      {
+        "source": "pricing-prd",
+        "status": "unchanged",
+        "files": 0
+      }
+    ]
+  },
+  "updated": {
+    "failed": false,
+    "results": [
+      {
+        "source": "pricing-prd",
+        "status": "queued",
+        "files": 1
+      },
+      {
+        "change": "e44cde56dfdc3ca35181601d5cdfa7d878748e6c124555862d151c595741fae0",
+        "status": "local",
+        "id": "b941d84507634c0b8c06bfa8",
+        "reportPath": "/tmp/bk-validation-KzO68Z/knowledge/.bk/proposals/b941d84507634c0b8c06bfa8/report.md"
+      }
+    ]
+  },
+  "modelCalls": 2,
+  "touchedFiles": [
+    "indexes/proposal-b941d84507634c0b8c06bfa8.json",
+    "knowledge/marketing/PROMO-PRICE-LOCK-001.md"
+  ],
+  "mainWorktreeRetainedApprovedVersion": true
+}

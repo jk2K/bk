@@ -192,3 +192,9 @@ bk validate
 测试使用本地真实 Git 仓库验证新增、修改、重命名、删除、强推、持久检查点、模型失败重试、干运行、提案去重及用户工作区隔离。平台 CLI 使用契约模拟测试；不将其等同于真实平台联调。Claude SDK 禁用任意内置工具与项目设置，只注册来源、规则和受限浏览工具。浏览器集成测试会启动真实 Chromium；推理测试使用可替换 SDK 测试适配器，尚未验证真实企业模型。
 
 CI 会安装 Chromium 并要求浏览器测试实际执行。本机已有 Chromium 时可用 `BK_CHROMIUM_EXECUTABLE_PATH=/path/to/chromium npm test`；容器确有需要时显式设置 `BK_CHROMIUM_NO_SANDBOX=1`。分析缓存会随模型、正式知识 Commit 或提示词/Schema 版本失效。
+
+## 验证产物与剩余工作
+
+[最新基线测试报告](docs/validation/2026-11-05/REPORT.md) 包含原始日志、JUnit、提案补丁、3 张真实浏览器截图和 MP4 录屏。[剩余工作](docs/VALIDATION-GAPS.md) 区分工程测试通过、尚需实机验收和仍待开发的能力。
+
+开发环境安装 ffmpeg 后运行 `npm run validate:artifacts`，默认将同类证据写入 `.bk/validation/latest/`。CI 每次实际复跑，并上传名为 `bk-validation-<run-id>-<attempt>` 的 Artifact，保留 30 天；仓库中的基线截图与视频长期随 Git 版本保存。所有演示数据均为合成样本，模型替身会明确标注，不录制真实账号或业务敏感页面。

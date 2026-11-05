@@ -12,8 +12,10 @@
     "test": "node --import tsx --test tests/*.test.ts",
     "dev": "tsx src/cli/index.ts",
     "prepack": "npm run build",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
+    "validate:artifacts": "node --import tsx scripts/validate-artifacts.ts",
+    "typecheck:validation": "tsc --noEmit -p tsconfig.validation.json"
   },
   "keywords": [],
   "author": "",
@@ -46,7 +48,10 @@
   "files": [
     "dist",
     "README.md",
-    "docs"
+    "docs/01-PRD.md",
+    "docs/02-TECHNICAL-DESIGN.md",
+    "docs/IMPLEMENTATION.md",
+    "docs/VALIDATION-GAPS.md"
   ],
   "engines": {
     "node": ">=24.0.0"

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "source_id": "browser-evidence",
+  "url": "http://127.0.0.1:41991/",
+  "scope_hash": "6a6c3590e040438f3e11d907f4c5c018f87fd4baef74be66e99fd9c6ddc2e20f",
+  "steps": [
+    {
+      "action": "click",
+      "selector": "#expand"
+    }
+  ]
+}
