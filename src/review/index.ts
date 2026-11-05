@@ -41,6 +41,7 @@ export async function createProposal(
   rules: Rule[],
   local: boolean,
   dryRun: boolean,
+  expectedBase?: string,
 ) {
   const active = assessment.actions.filter((a) => a.action !== "no_change");
   if (!active.length) return { status: "no_change" };
@@ -60,6 +61,10 @@ export async function createProposal(
       root,
     )
   ).trim();
+  if (expectedBase && expectedBase !== currentBase)
+    throw new Error(
+      "Knowledge baseline advanced during analysis; retry against the new approved revision",
+    );
   if (existing && existing.base !== currentBase)
     throw new Error(
       "Knowledge baseline advanced during proposal recovery; inspect the prepared proposal before retrying",

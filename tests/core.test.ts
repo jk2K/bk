@@ -391,3 +391,72 @@ test("CLI init preserves existing content and exposes useful commands", async (t
   for (const cmd of ["sync", "watch", "scan", "analyze", "proposals"])
     assert.match(help, new RegExp(cmd));
 });
+test("analysis cache is tied to model and approved knowledge revision", async (t) => {
+  const root = await fixture(t),
+    upstream = join(root, "source"),
+    knowledge = join(root, "knowledge");
+  await repo(upstream);
+  await writeFile(join(upstream, "prd.md"), "Stable pricing requirement");
+  await commit(upstream);
+  await repo(knowledge);
+  const c = ConfigSchema.parse({ version: 1, sources: [source(upstream)] });
+  const state = new State(knowledge);
+  t.after(() => state.close());
+  let calls = 0;
+  const agent = {
+    analyze: async () => {
+      calls++;
+      return { assessment: { actions: [] }, usage: {} };
+    },
+  };
+  await pipeline(knowledge, c, state, {}, agent);
+  assert.equal(calls, 1);
+  state.db.prepare("UPDATE changes SET status='queued'").run();
+  await pipeline(knowledge, c, state, { analyzeOnly: true }, agent);
+  assert.equal(calls, 1);
+  c.agent.model = "new-model";
+  state.db.prepare("UPDATE changes SET status='queued'").run();
+  await pipeline(knowledge, c, state, { analyzeOnly: true }, agent);
+  assert.equal(calls, 2);
+  await writeFile(join(knowledge, "README.md"), "New approved context");
+  await commit(knowledge);
+  state.db.prepare("UPDATE changes SET status='queued'").run();
+  await pipeline(knowledge, c, state, { analyzeOnly: true }, agent);
+  assert.equal(calls, 3);
+});
+test("newly restricted source policy blocks previously queued public snapshots before model transmission", async (t) => {
+  const root = await fixture(t),
+    upstream = join(root, "source"),
+    knowledge = join(root, "knowledge");
+  await repo(upstream);
+  await writeFile(
+    join(upstream, "prd.md"),
+    "Public at discovery, restricted at execution",
+  );
+  await commit(upstream);
+  await repo(knowledge);
+  const c = ConfigSchema.parse({ version: 1, sources: [source(upstream)] }),
+    state = new State(knowledge);
+  t.after(() => state.close());
+  await pipeline(knowledge, c, state, { scanOnly: true });
+  c.sources[0].data_classification = "restricted";
+  let calls = 0;
+  const result = await pipeline(
+    knowledge,
+    c,
+    state,
+    { analyzeOnly: true },
+    {
+      analyze: async () => {
+        calls++;
+        return { assessment: { actions: [] }, usage: {} };
+      },
+    },
+  );
+  assert.equal(result.failed, true);
+  assert.equal(calls, 0);
+  assert.equal(
+    state.db.prepare("SELECT status FROM changes").get()!.status,
+    "blocked",
+  );
+});

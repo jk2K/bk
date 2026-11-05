@@ -68,6 +68,11 @@ const web = z
         interactive: z.boolean().default(false),
         login_url: z.string().url().optional(),
         auth_selector: z.string().optional(),
+        readonly_selectors: z
+          .array(z.string().min(1).max(300))
+          .max(30)
+          .default([]),
+        recipe: z.string().optional(),
       })
       .strict(),
     crawl: z
@@ -171,6 +176,14 @@ export const ConfigSchema = z
         image: z
           .object({
             enabled: z.boolean().default(false),
+            max_per_page: z.number().int().positive().max(10).default(4),
+            max_per_run: z.number().int().positive().max(50).default(10),
+            max_bytes: z
+              .number()
+              .int()
+              .positive()
+              .max(5000000)
+              .default(2000000),
             mode: z
               .literal("diagram-or-description")
               .default("diagram-or-description"),
@@ -179,6 +192,9 @@ export const ConfigSchema = z
           .strict()
           .default({
             enabled: false,
+            max_per_page: 4,
+            max_per_run: 10,
+            max_bytes: 2000000,
             mode: "diagram-or-description",
             verify_semantics: true,
           }),
@@ -200,6 +216,9 @@ export const ConfigSchema = z
         emit: ["markdown", "mermaid"],
         image: {
           enabled: false,
+          max_per_page: 4,
+          max_per_run: 10,
+          max_bytes: 2000000,
           mode: "diagram-or-description",
           verify_semantics: true,
         },

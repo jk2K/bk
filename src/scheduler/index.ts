@@ -1,3 +1,5 @@
+import { assertTransmission } from "../agent/runtime.js";
+import { interpretCached } from "../knowledge/images.js";
 import { validateMarkdown } from "../validation/index.js";
 import { join } from "node:path";
 import type { Config, Source } from "../config/index.js";
@@ -20,6 +22,7 @@ export interface Options {
   dueOnly?: boolean;
   scanOnly?: boolean;
   analyzeOnly?: boolean;
+  signal?: AbortSignal;
 }
 export async function pipeline(
   root: string,
@@ -29,6 +32,12 @@ export async function pipeline(
   agent: AgentProvider = new ClaudeAgent(),
 ) {
   const output: unknown[] = [];
+  let modelJobs = 0;
+  const claimModel = () => {
+    if (modelJobs >= c.watch.budgets.max_agent_jobs_per_run)
+      throw new Error("MODEL_RUN_BUDGET_EXHAUSTED");
+    modelJobs++;
+  };
   let failed = false;
   if (options.source && !c.sources.some((s) => s.id === options.source))
     throw new Error(`Unknown source: ${options.source}`);
@@ -69,7 +78,7 @@ export async function pipeline(
       Array.from(
         { length: Math.min(c.watch.max_concurrent_sources, jobs.length) },
         async () => {
-          while (next < jobs.length) {
+          while (next < jobs.length && !options.signal?.aborted) {
             const { source, pages } = jobs[next++];
             const prev = state.getSource(source.id);
             if (
@@ -104,7 +113,16 @@ export async function pipeline(
               const change =
                 source.type === "git"
                   ? await scanGit(root, source, prev?.revision ?? null)
-                  : await scanWeb(root, source, prev?.revision ?? null, pages);
+                  : await scanWeb(root, source, prev?.revision ?? null, pages, {
+                      config: c,
+                      agent: options.scanOnly ? undefined : agent,
+                      beforeExplore: claimModel,
+                      onUsage: (usage) =>
+                        state.event("browser_usage", {
+                          source: source.id,
+                          usage,
+                        }),
+                    });
               state.transaction(() => {
                 if (change.evidence.length)
                   state.db
@@ -158,7 +176,20 @@ export async function pipeline(
                   status,
                   e.message,
                 );
-              output.push({ source: source.id, status, error: e.message });
+              if (e.message === "MODEL_RUN_BUDGET_EXHAUSTED")
+                state.db
+                  .prepare(
+                    "UPDATE sources SET status='deferred',attempts=? WHERE id=?",
+                  )
+                  .run(prev?.attempts ?? 0, source.id);
+              output.push({
+                source: source.id,
+                status:
+                  e.message === "MODEL_RUN_BUDGET_EXHAUSTED"
+                    ? "deferred"
+                    : status,
+                error: e.message,
+              });
             }
           }
         },
@@ -167,7 +198,9 @@ export async function pipeline(
   }
   if (!options.scanOnly) {
     let count = 0;
+    let imageCount = 0;
     for (const job of state.pending(options.source)) {
+      if (options.signal?.aborted) break;
       if (count++ >= c.watch.budgets.max_agent_jobs_per_run) break;
       const change: ChangeSet = JSON.parse(job.payload);
       // Removed sources are paused; queued changes keep their original policy snapshot.
@@ -182,17 +215,73 @@ export async function pipeline(
           )
           .run(job.id);
       try {
-        const rules = await readRules(root, c, await baselineRef(root, c));
-        const result = job.result
+        assertTransmission(change.source, c);
+        assertTransmission(
+          c.sources.find((s) => s.id === change.source.id)!,
+          c,
+        );
+        const knowledgeRevision = (
+          await run("git", ["rev-parse", await baselineRef(root, c)], root)
+        ).trim();
+        const rules = await readRules(root, c, knowledgeRevision);
+        const analysisKey = hash(
+          JSON.stringify([
+            job.id,
+            knowledgeRevision,
+            c.agent.model,
+            "assessment-prompt-v2",
+            "schema-v1",
+            c.compiler.image,
+          ]),
+        );
+        const cached = job.result && job.analysis_key === analysisKey;
+        if (
+          !cached &&
+          c.compiler.image.enabled &&
+          change.source.type === "web" &&
+          change.images?.length
+        ) {
+          const unique = [
+            ...new Map(change.images.map((i) => [i.hash, i])).values(),
+          ];
+          if (imageCount + unique.length > c.compiler.image.max_per_run)
+            throw new Error("IMAGE_RUN_BUDGET_EXHAUSTED");
+          imageCount += unique.length;
+          change.derivedImages = [];
+          for (const image of unique) {
+            const result = await interpretCached(
+              root,
+              image,
+              change.source,
+              c,
+              agent,
+              claimModel,
+            );
+            change.derivedImages.push({
+              hash: image.hash,
+              markdown: result.markdown,
+            });
+            if (!options.dryRun)
+              state.event("image_analysis", {
+                hash: image.hash,
+                usage: result.usage,
+                cached: result.cached,
+              });
+          }
+        }
+        const result = cached
           ? { assessment: JSON.parse(job.result), usage: null }
-          : await agent.analyze(change, rules, c);
+          : await (async () => {
+              claimModel();
+              return agent.analyze(change, rules, c);
+            })();
         const assessment = validateAssessment(result.assessment, change, rules);
         for (const action of assessment.actions)
           await validateMarkdown(action.after);
         if (!options.dryRun)
           state.db
-            .prepare("UPDATE changes SET result=? WHERE id=?")
-            .run(JSON.stringify(assessment), job.id);
+            .prepare("UPDATE changes SET result=?,analysis_key=? WHERE id=?")
+            .run(JSON.stringify(assessment), analysisKey, job.id);
         const proposal = await createProposal(
           root,
           c,
@@ -202,6 +291,7 @@ export async function pipeline(
           rules,
           !!options.local,
           !!options.dryRun,
+          knowledgeRevision,
         );
         if (!options.dryRun) {
           state.db
@@ -218,11 +308,17 @@ export async function pipeline(
         failed = true;
         const blocked = /BLOCKED_BY_POLICY|not implemented/.test(e.message);
         const attempts = job.attempts + 1;
-        const status = blocked
-          ? "blocked"
-          : attempts >= c.watch.retry.max_attempts
-            ? "needs_review"
-            : "retry";
+        const deferred = [
+          "MODEL_RUN_BUDGET_EXHAUSTED",
+          "IMAGE_RUN_BUDGET_EXHAUSTED",
+        ].includes(e.message);
+        const status = deferred
+          ? "retry"
+          : blocked
+            ? "blocked"
+            : attempts >= c.watch.retry.max_attempts
+              ? "needs_review"
+              : "retry";
         const retry =
           Date.now() +
           Math.min(
@@ -235,6 +331,10 @@ export async function pipeline(
               "UPDATE changes SET status=?,retry_at=?,error=? WHERE id=?",
             )
             .run(status, retry, e.message, job.id);
+        if (deferred && !options.dryRun)
+          state.db
+            .prepare("UPDATE changes SET attempts=MAX(0,attempts-1) WHERE id=?")
+            .run(job.id);
         output.push({ change: job.id, status, error: e.message });
       }
     }
@@ -284,7 +384,7 @@ export async function watch(
         try {
           emit(
             await withPipeline(root, (s) =>
-              pipeline(root, config, s, { dueOnly: true }),
+              pipeline(root, config, s, { dueOnly: true, signal }),
             ),
           );
         } catch (e: any) {

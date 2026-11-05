@@ -13,14 +13,24 @@ export class State {
   CREATE TABLE IF NOT EXISTS changes(id TEXT PRIMARY KEY, source_id TEXT NOT NULL, revision TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, retry_at INTEGER NOT NULL DEFAULT 0, result TEXT, error TEXT);
   CREATE TABLE IF NOT EXISTS proposals(id TEXT PRIMARY KEY, change_id TEXT UNIQUE NOT NULL, base TEXT NOT NULL, branch TEXT NOT NULL, status TEXT NOT NULL, report TEXT NOT NULL, remote TEXT);
   CREATE TABLE IF NOT EXISTS history(id INTEGER PRIMARY KEY, at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, kind TEXT NOT NULL, payload TEXT NOT NULL);`);
-    if (
-      !(this.db.prepare("PRAGMA table_info(sources)").all() as any[]).some(
-        (c) => c.name === "attempts",
+    this.transaction(() => {
+      if (
+        !(this.db.prepare("PRAGMA table_info(sources)").all() as any[]).some(
+          (c) => c.name === "attempts",
+        )
       )
-    )
-      this.db.exec(
-        "ALTER TABLE sources ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0; INSERT OR IGNORE INTO schema_migrations VALUES(2);",
-      );
+        this.db.exec(
+          "ALTER TABLE sources ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0; INSERT OR IGNORE INTO schema_migrations VALUES(2);",
+        );
+      if (
+        !(this.db.prepare("PRAGMA table_info(changes)").all() as any[]).some(
+          (c) => c.name === "analysis_key",
+        )
+      )
+        this.db.exec(
+          "ALTER TABLE changes ADD COLUMN analysis_key TEXT; INSERT OR IGNORE INTO schema_migrations VALUES(3);",
+        );
+    });
     // The repository lock guarantees there is no live owner when opening a write pipeline.
   }
   recover() {

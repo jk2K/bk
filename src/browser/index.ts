@@ -50,6 +50,15 @@ export async function withBrowser<T>(
       join(root, ".bk/browser-profiles", s.browser.profile),
       {
         headless: headed ? false : s.browser.headless,
+        ...(process.env.BK_CHROMIUM_EXECUTABLE_PATH
+          ? {
+              executablePath: process.env.BK_CHROMIUM_EXECUTABLE_PATH,
+              args:
+                process.env.BK_CHROMIUM_NO_SANDBOX === "1"
+                  ? ["--no-sandbox"]
+                  : [],
+            }
+          : {}),
         acceptDownloads: false,
         serviceWorkers: "block",
       },

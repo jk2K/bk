@@ -14,7 +14,7 @@ import { readRules } from "../knowledge/index.js";
 const program = new Command()
   .name("bk")
   .description("Git-native business knowledge evolution")
-  .version("0.1.0")
+  .version("0.2.0")
   .option("-C, --cwd <path>", "Knowledge repository", ".")
   .option("--json", "Machine-readable JSON");
 const root = () => resolve(program.opts().cwd);
@@ -108,7 +108,9 @@ program
     }
     const { chromium } = await import("playwright");
     try {
-      await access(chromium.executablePath());
+      await access(
+        process.env.BK_CHROMIUM_EXECUTABLE_PATH ?? chromium.executablePath(),
+      );
       checks.push({ name: "chromium", ok: true });
     } catch {
       checks.push({

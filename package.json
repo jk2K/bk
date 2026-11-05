@@ -1,6 +1,6 @@
 {
   "name": "@jk2k/bk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Git-native business knowledge evolution CLI",
   "directories": {
     "doc": "docs",
@@ -31,6 +31,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@types/jsdom": "30.0.0",
     "@types/node": "26.6.6",
     "@types/picomatch": "4.0.3",

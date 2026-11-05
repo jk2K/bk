@@ -118,6 +118,17 @@ export function validateAssessment(
         "Implementation/test evidence or rebased history cannot independently approve business intent",
       );
     }
+    if (
+      a.evidence.some((e) =>
+        change.evidence
+          .find((doc) => doc.locator === e.locator)
+          ?.after.includes("IMAGE SHA256 "),
+      )
+    ) {
+      a.uncertainty.push(
+        "Visual evidence is a derived interpretation requiring human verification",
+      );
+    }
     if (a.uncertainty.length || a.businessEffectiveStatus === "unknown") {
       if (["add_rule", "update_rule"].includes(a.action))
         a.action = "needs_clarification";
@@ -137,8 +148,10 @@ export function renderRule(
     kind: change.source.role,
     locator: e.locator,
     revision: e.revision,
-    content_hash: change.evidence.find((d) => d.locator === e.locator)!
-      .afterHash,
+    content_hash:
+      e.revision === change.fromRevision
+        ? change.evidence.find((d) => d.locator === e.locator)!.beforeHash
+        : change.evidence.find((d) => d.locator === e.locator)!.afterHash,
     quote: e.quote,
   }));
   const meta = {

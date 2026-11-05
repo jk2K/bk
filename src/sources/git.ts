@@ -20,6 +20,8 @@ export interface ChangeSet {
   evidence: Evidence[];
   rebased: boolean;
   createdAt: string;
+  images?: import("./assets.js").ImageAsset[];
+  derivedImages?: Array<{ hash: string; markdown: string }>;
 }
 const MAX_FILE = 512_000,
   MAX_TOTAL = 2_000_000;
