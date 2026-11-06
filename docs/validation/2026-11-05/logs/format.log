@@ -1,0 +1,7 @@
+
+> @jk2k/bk@0.2.0 format:check
+> prettier --check "src/**/*.ts" "tests/**/*.ts" "scripts/**/*.ts"
+
+Checking formatting...
+All matched files use Prettier code style!
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.

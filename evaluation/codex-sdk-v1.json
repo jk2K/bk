@@ -1,0 +1,370 @@
+{
+  "version": 1,
+  "repository": {
+    "url": "https://github.com/openai/codex",
+    "commit": "6103cf6c78b90effe3da8b943f943505308d5de8"
+  },
+  "documentation": "https://learn.chatgpt.com/docs/codex-sdk",
+  "requestSearch": "https://github.com/openai/codex/issues?q=is%3Aissue+state%3Aopen+feature+request",
+  "snapshotDate": "2026-11-06",
+  "evidence": [
+    {
+      "id": "D-THREAD",
+      "kind": "documentation",
+      "url": "https://learn.chatgpt.com/docs/codex-sdk",
+      "section": "TypeScript library / Usage",
+      "revision": "sha256:736af89f5d5edfa31c0c6c698a5a747673a5dfba813cfe8a9927e7501535fc82",
+      "summary": "The TypeScript client can start a thread, continue it with another run, or reconstruct a prior thread from its ID."
+    },
+    {
+      "id": "D-SOURCE",
+      "kind": "documentation",
+      "url": "https://learn.chatgpt.com/docs/codex-sdk",
+      "section": "Usage / threadSource",
+      "revision": "sha256:736af89f5d5edfa31c0c6c698a5a747673a5dfba813cfe8a9927e7501535fc82",
+      "summary": "Integrations can label a thread at creation with threadSource. A resumed thread retains the original source."
+    },
+    {
+      "id": "D-CONFIG",
+      "kind": "documentation",
+      "url": "https://learn.chatgpt.com/docs/codex-sdk",
+      "section": "Configuration overrides",
+      "revision": "sha256:736af89f5d5edfa31c0c6c698a5a747673a5dfba813cfe8a9927e7501535fc82",
+      "summary": "Structured config is applied before raw configOverrides. Managed SDK settings follow. These overrides leave configuration files unchanged."
+    },
+    {
+      "id": "D-INTEGRATION",
+      "kind": "documentation",
+      "url": "https://learn.chatgpt.com/docs/codex-sdk",
+      "section": "Codex SDK overview",
+      "revision": "sha256:736af89f5d5edfa31c0c6c698a5a747673a5dfba813cfe8a9927e7501535fc82",
+      "summary": "The SDK is described for coding automation and CI. The app server is the documented surface for custom clients handling authentication, conversation history, approvals and streamed agent events."
+    },
+    {
+      "id": "S-CODEX",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/src/codex.ts#L23-L38",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "startThread constructs one Thread object. resumeThread constructs a Thread with the supplied ID."
+    },
+    {
+      "id": "S-RUN",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/src/thread.ts#L42-L140",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "A new Thread starts with an unset ID and stores the ID from thread.started. runStreamed exposes events, while run collects items and final response."
+    },
+    {
+      "id": "S-ORIGIN",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/src/exec.ts#L95-L125",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "The CLI arguments contain a thread source only when a source is set and there is no existing thread ID."
+    },
+    {
+      "id": "S-CONFIG",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/src/exec.ts#L95-L118",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "The wrapper appends structured configuration, then raw overrides, then managed options such as the base URL and model."
+    },
+    {
+      "id": "S-IMAGE",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/src/thread.ts#L143-L163",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "Structured inputs can include local image paths. Input normalization separates those paths from text."
+    },
+    {
+      "id": "S-STREAM-DOC",
+      "kind": "source",
+      "url": "https://github.com/openai/codex/blob/6103cf6c78b90effe3da8b943f943505308d5de8/sdk/typescript/README.md#L34-L51",
+      "revision": "6103cf6c78b90effe3da8b943f943505308d5de8",
+      "summary": "The repository README distinguishes buffered run from incremental structured events via runStreamed."
+    },
+    {
+      "id": "R-MULTI",
+      "kind": "request",
+      "url": "https://github.com/openai/codex/issues/58623",
+      "revision": "2026-11-02T03:15:22Z",
+      "state": "open",
+      "summary": "The open Issue asks about creating, running and resuming multiple sessions through the TypeScript SDK. It gives no acceptance criteria for a dedicated orchestration API."
+    },
+    {
+      "id": "R-JAVA",
+      "kind": "request",
+      "url": "https://github.com/openai/codex/issues/43469",
+      "revision": "2026-09-07T13:27:23Z",
+      "state": "open",
+      "summary": "The open Issue requests an official Java SDK or a supported Java App Server client. Suggested scope includes account login and thread/turn lifecycle."
+    }
+  ],
+  "cases": [
+    {
+      "id": "multi-thread-request",
+      "question": "How much of the multi-session request can be established from the documented TypeScript interfaces?",
+      "evidence": [
+        "D-THREAD",
+        "S-CODEX",
+        "R-MULTI"
+      ],
+      "claims": [
+        {
+          "id": "individual-threads",
+          "text": "Individual threads can be created and resumed."
+        },
+        {
+          "id": "orchestrator",
+          "text": "A built-in multi-session orchestration API is established by the cited material."
+        },
+        {
+          "id": "request",
+          "text": "The issue is a request/question rather than a release record."
+        }
+      ],
+      "expected": {
+        "verdict": "partial",
+        "claims": [
+          "individual-threads",
+          "request"
+        ],
+        "evidence": [
+          "D-THREAD",
+          "S-CODEX",
+          "R-MULTI"
+        ]
+      }
+    },
+    {
+      "id": "java-sdk-request",
+      "question": "Can the Java integration feature be promoted to a supported product rule based on this issue?",
+      "evidence": [
+        "R-JAVA",
+        "D-INTEGRATION"
+      ],
+      "claims": [
+        {
+          "id": "java-request",
+          "text": "An official Java SDK or supported Java client was requested."
+        },
+        {
+          "id": "java-released",
+          "text": "The requested Java SDK is already released."
+        },
+        {
+          "id": "app-server",
+          "text": "The app server is a documented integration surface for custom clients."
+        }
+      ],
+      "expected": {
+        "verdict": "requested",
+        "claims": [
+          "java-request",
+          "app-server"
+        ],
+        "evidence": [
+          "R-JAVA",
+          "D-INTEGRATION"
+        ]
+      }
+    },
+    {
+      "id": "resume-source",
+      "question": "Can resuming an existing thread overwrite its origin label via threadSource?",
+      "evidence": [
+        "D-SOURCE",
+        "S-ORIGIN"
+      ],
+      "claims": [
+        {
+          "id": "creation-only",
+          "text": "The option is forwarded for creation without an existing thread ID."
+        },
+        {
+          "id": "preserve",
+          "text": "Resuming preserves the existing origin label."
+        },
+        {
+          "id": "rewrite",
+          "text": "Supplying a new source label during resume replaces the old label."
+        }
+      ],
+      "expected": {
+        "verdict": "confirmed",
+        "claims": [
+          "creation-only",
+          "preserve"
+        ],
+        "evidence": [
+          "D-SOURCE",
+          "S-ORIGIN"
+        ]
+      }
+    },
+    {
+      "id": "config-order",
+      "question": "What is the order of per-client configuration overrides?",
+      "evidence": [
+        "D-CONFIG",
+        "S-CONFIG"
+      ],
+      "claims": [
+        {
+          "id": "structured-first",
+          "text": "Structured configuration precedes raw overrides."
+        },
+        {
+          "id": "managed-later",
+          "text": "Managed SDK options are appended later."
+        },
+        {
+          "id": "writes-files",
+          "text": "These SDK overrides rewrite Codex configuration files."
+        }
+      ],
+      "expected": {
+        "verdict": "confirmed",
+        "claims": [
+          "structured-first",
+          "managed-later"
+        ],
+        "evidence": [
+          "D-CONFIG",
+          "S-CONFIG"
+        ]
+      }
+    },
+    {
+      "id": "streaming",
+      "question": "Which SDK call allows a caller to handle incremental turn events?",
+      "evidence": [
+        "S-RUN",
+        "S-STREAM-DOC"
+      ],
+      "claims": [
+        {
+          "id": "streamed",
+          "text": "runStreamed exposes an asynchronous event iterator."
+        },
+        {
+          "id": "buffered",
+          "text": "run returns the collected turn result."
+        },
+        {
+          "id": "run-events",
+          "text": "run has the same streaming return type as runStreamed."
+        }
+      ],
+      "expected": {
+        "verdict": "confirmed",
+        "claims": [
+          "streamed",
+          "buffered"
+        ],
+        "evidence": [
+          "S-RUN",
+          "S-STREAM-DOC"
+        ]
+      }
+    },
+    {
+      "id": "thread-id-timing",
+      "question": "Is a fresh thread guaranteed to expose a reusable ID before its first turn?",
+      "evidence": [
+        "D-THREAD",
+        "S-RUN"
+      ],
+      "claims": [
+        {
+          "id": "initial-null",
+          "text": "A fresh thread can have a null ID."
+        },
+        {
+          "id": "event-assignment",
+          "text": "The SDK assigns the ID after the thread-started event."
+        },
+        {
+          "id": "constructor-id",
+          "text": "startThread always allocates the final ID synchronously."
+        }
+      ],
+      "expected": {
+        "verdict": "unsupported",
+        "claims": [
+          "initial-null",
+          "event-assignment"
+        ],
+        "evidence": [
+          "D-THREAD",
+          "S-RUN"
+        ]
+      }
+    },
+    {
+      "id": "local-image",
+      "question": "Does the input schema support attaching local images with text?",
+      "evidence": [
+        "S-IMAGE",
+        "S-RUN"
+      ],
+      "claims": [
+        {
+          "id": "image-path",
+          "text": "A structured local_image entry carries a local path."
+        },
+        {
+          "id": "split-input",
+          "text": "The wrapper separates image paths from text."
+        },
+        {
+          "id": "remote-url",
+          "text": "The same input type guarantees remote image URLs are fetched automatically."
+        }
+      ],
+      "expected": {
+        "verdict": "confirmed",
+        "claims": [
+          "image-path",
+          "split-input"
+        ],
+        "evidence": [
+          "S-IMAGE",
+          "S-RUN"
+        ]
+      }
+    },
+    {
+      "id": "integration-surface",
+      "question": "Which surface does the official SDK page identify for clients that own login, history and approvals?",
+      "evidence": [
+        "D-INTEGRATION",
+        "D-THREAD"
+      ],
+      "claims": [
+        {
+          "id": "app-server",
+          "text": "The page points custom clients to the app server."
+        },
+        {
+          "id": "sdk-automation",
+          "text": "The SDK supports coding automation and programmatic local threads."
+        },
+        {
+          "id": "equivalence",
+          "text": "The cited SDK thread methods establish the full custom-client protocol."
+        }
+      ],
+      "expected": {
+        "verdict": "confirmed",
+        "claims": [
+          "app-server",
+          "sdk-automation"
+        ],
+        "evidence": [
+          "D-INTEGRATION",
+          "D-THREAD"
+        ]
+      }
+    }
+  ]
+}

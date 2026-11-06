@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="rule index matches source anchors, renamed paths and Chinese text, then follows related IDs" time="0.034606" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="SDK runtime disables shell/project settings and only permits explicit read-only tools" time="0.040628" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="Claude adapter registers bounded evidence tools and blocks restricted transmission before any SDK call" time="0.021744" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="public source cannot leak related internal approved rules to a model" time="0.001320" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="SDK errors and malformed structured outputs fail closed" time="0.010383" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="image-bearing source actions require human clarification even with a textual quote" time="0.004319" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="shared SDK runtime serializes exploration, vision and analysis calls under one agent limit" time="0.040418" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/agent.test.ts"/>
+	<testcase name="browser: visible JS content, normalized snapshots, unchanged hash and page limits" time="1.590634" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: readonly controls, verified recipe replay, form blocking and network write interception" time="0.903196" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: profile cookies persist and expired authentication never becomes unchanged" time="0.623806" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: off-host redirect is blocked before destination navigation" time="0.316264" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: image bytes changing at the same URL trigger a new immutable source revision" time="0.736115" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: sync exploration drafts a replay-verified recipe while scan-only never calls a model" time="0.845265" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="browser: disappearing navigation link retains earlier page snapshots" time="0.820654" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/browser.test.ts"/>
+	<testcase name="strict config rejects unknown keys, duplicates, invalid durations and automatic merge" time="0.004819" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="config cannot follow symlink output directories" time="0.120005" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="repository lock excludes concurrent writers and releases" time="0.005845" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="Git scans first import, modifications, renames and deletions" time="0.464734" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="whitespace changes are retained because whitespace can carry business meaning" time="0.241520" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="force push is detected and requires reconfirmation" time="0.334258" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="evidence must reference exact source, revision and verbatim content" time="0.004299" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="code and test evidence cannot approve a rule" time="0.000486" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="uncertain or unknown-effective rules become clarification reports" time="0.000529" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="stale before statement is rejected and manual text is preserved by rendering" time="0.007342" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="SQLite transactions roll back and interrupted analysis recovers" time="0.028216" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="scan → failed model → retry → isolated proposal → unchanged sync is idempotent" time="0.447455" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="dry run leaves jobs pending and creates no branch or proposal" time="0.324120" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="CLI init preserves existing content and exposes useful commands" time="5.657830" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="analysis cache is tied to model and approved knowledge revision" time="0.562133" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="newly restricted source policy blocks previously queued public snapshots before model transmission" time="0.349046" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/core.test.ts"/>
+	<testcase name="visual IR validates graph references and emits actual Mermaid through the parser" time="0.786392" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/images.test.ts"/>
+	<testcase name="charts emit tables and UI/photos never invent a relationship graph" time="0.001061" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/images.test.ts"/>
+	<testcase name="image inference caches by content/model version and verification uncertainty remains explicit" time="0.144603" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/images.test.ts"/>
+	<testcase name="vision resumes a saved intermediate result when a run budget expires before verification" time="0.044878" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/images.test.ts"/>
+	<testcase name="gh: create, discover duplicate, and reconcile review states" time="0.021754" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/provider.test.ts"/>
+	<testcase name="glab: create, discover duplicate, and reconcile review states" time="0.019336" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/provider.test.ts"/>
+	<testcase name="gt: create, discover duplicate, and reconcile review states" time="0.012716" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/provider.test.ts"/>
+	<testcase name="tea: create, discover duplicate, and reconcile review states" time="0.022801" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/provider.test.ts"/>
+	<testcase name="actual MCP evidence server exposes only the three scoped source/knowledge tools" time="0.092454" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/tools.test.ts"/>
+	<testcase name="actual MCP transport denies unknown paths, oversized reads and unrelated rule access" time="0.017125" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/tools.test.ts"/>
+	<testcase name="Mermaid parser accepts valid diagrams and rejects broken syntax" time="1.333164" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/validation.test.ts"/>
+	<testcase name="Markdown cannot embed script or interactive Mermaid directives" time="0.000556" classname="test" file="/workspace/scratch/1b756c2c533b/bk/tests/validation.test.ts"/>
+	<!-- tests 42 -->
+	<!-- suites 0 -->
+	<!-- pass 42 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 12544.082103 -->
+</testsuites>

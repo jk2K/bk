@@ -1,0 +1,174 @@
+{
+  "startedAt": "2026-11-05T06:17:56.244Z",
+  "finishedAt": "2026-11-05T06:18:29.581Z",
+  "baseCommit": "358cf3da27432cb13776a226766fa9569803a307",
+  "workingTreeChanges": [
+    "M .github/workflows/ci.yml",
+    " M README.md",
+    " M docs/IMPLEMENTATION.md",
+    " M package.json",
+    " M src/browser/index.ts",
+    "?? docs/VALIDATION-GAPS.md",
+    "?? docs/validation/",
+    "?? scripts/",
+    "?? tsconfig.validation.json"
+  ],
+  "node": "v24.22.1",
+  "browser": "/workspace/scratch/1b756c2c533b/chromium-test",
+  "browserVersion": "153.0.8010.0",
+  "counts": {
+    "tests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "durationMs": 1758,
+      "log": "logs/typecheck.log"
+    },
+    {
+      "name": "validation-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck:validation"
+      ],
+      "exitCode": 0,
+      "durationMs": 2333,
+      "log": "logs/validation-typecheck.log"
+    },
+    {
+      "name": "tests",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "--test-reporter=spec",
+        "--test-reporter-destination=/workspace/scratch/1b756c2c533b/bk/docs/validation/2026-11-05/logs/tests-spec.log",
+        "--test-reporter=junit",
+        "--test-reporter-destination=/workspace/scratch/1b756c2c533b/bk/docs/validation/2026-11-05/junit.xml",
+        "--test-reporter=tap",
+        "--test-reporter-destination=/workspace/scratch/1b756c2c533b/bk/docs/validation/2026-11-05/logs/tests.tap",
+        "tests/agent.test.ts",
+        "tests/browser.test.ts",
+        "tests/core.test.ts",
+        "tests/images.test.ts",
+        "tests/provider.test.ts",
+        "tests/tools.test.ts",
+        "tests/validation.test.ts"
+      ],
+      "exitCode": 0,
+      "durationMs": 12787,
+      "log": "logs/tests.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "durationMs": 1649,
+      "log": "logs/build.log"
+    },
+    {
+      "name": "format",
+      "command": [
+        "npm",
+        "run",
+        "format:check"
+      ],
+      "exitCode": 0,
+      "durationMs": 1499,
+      "log": "logs/format.log"
+    },
+    {
+      "name": "package",
+      "command": [
+        "npm",
+        "pack",
+        "--dry-run"
+      ],
+      "exitCode": 0,
+      "durationMs": 2407,
+      "log": "logs/package.log"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "Git scan → local proposal → simulated human merge → requirement update",
+      "status": "passed",
+      "evidence": "pipeline-results.json",
+      "model": "mock",
+      "assertions": [
+        "unchanged source made zero additional model calls",
+        "second requirement generated a minimal patch",
+        "unapproved update did not alter the formal worktree"
+      ]
+    },
+    {
+      "name": "Real Chromium scoped browsing, recipe replay and POST blocking",
+      "status": "passed",
+      "screenshots": [
+        "01-source-collapsed.png",
+        "02-source-expanded.png",
+        "03-write-protection.png"
+      ],
+      "video": "browser-validation.mp4",
+      "frames": 10,
+      "modelCalls": 0,
+      "receivedWrites": 0
+    }
+  ],
+  "sourceFingerprints": {
+    ".github/workflows/ci.yml": "d3bacecef9265cfe2af79fb2568be52c883e80d904ba11762a610cd46ce955fc",
+    "docs/VALIDATION-GAPS.md": "f6626d70e8852245692df879f0c9d4d5783cf0778118087a30da6f8dd39d4d38",
+    "package-lock.json": "0ab1482a91119a091106e2616cc9204243811e5a3720b69442a694dc849e75ea",
+    "package.json": "2db18a5d5904d23428e411649e4016e83bdd226f5c859f2d686d124a8b5c2551",
+    "scripts/validate-artifacts.ts": "672e146ebce62c67260cc0eecbfd7d0497e29e643bc9a7dc429045cb4d95bdd7",
+    "scripts/validation-report.ts": "9524d4fc3420bbfc725afea0e879c26fcbaa7581e05b744277eafaf8f6a6e992",
+    "src/agent/evidence-tools.ts": "4b13f9efed2abb1cadf8352355b3762e27b3588cc47b7741276df8a8a9496896",
+    "src/agent/index.ts": "13ae73fcea08fb67df93ac2527aaf3c66aab979729b466bb81094e39511871c2",
+    "src/agent/runtime.ts": "eabaac9f937777cff64b6b8745b4305d7a0c491f39d856144b7103fc8443b112",
+    "src/browser/index.ts": "f56f35da3558f425f3e046963ec16063ac3a2b62dcd840b5dd7e525a609b3f52",
+    "src/browser/session.ts": "2e42af2399ba60855d8d4c654c26adaa26b273a50b4e13bd884bb6b7e58cabda",
+    "src/cli/index.ts": "277343b23c3f0bb1072965cac9d8a0d22e4adf349f68a910bd0418e08fd389fc",
+    "src/config/index.ts": "6be71f78a88f9ea154e424e54e3bc8195563e5a8590e3ef562280e4e33bc17b9",
+    "src/knowledge/images.ts": "b1a71f7c4fdeed1e2150dc3b337ea9cd0352ff3bad9cf540d675c471b58086b2",
+    "src/knowledge/index.ts": "650b085ed10e28a660024ffaa52df8eaa36869bc0007753d02ea5d7451d515f5",
+    "src/knowledge/retrieval.ts": "81da695f4b7818ee261f0b9818059012ecb44e046677cb9a1dcd00b6b332bac1",
+    "src/review/index.ts": "b9384a1da35ad6d58a15f7ea65a8d72c4c63f33a5d32a82154d615a00fa45076",
+    "src/review/provider.ts": "154f192d772c53be2d8eaed2c884ffa6b35b6e597ae8fb9c9cc15f2a2056ae4e",
+    "src/scheduler/index.ts": "4ef62cbfc3c5a7b65971950304c64348913b5c7e6b9d04b3f10b1b938c019f58",
+    "src/sources/assets.ts": "20cb19f5bf81635a8c62ad4e5d56a2dbb9f7b743d0594505fcf7277ea21b2475",
+    "src/sources/git.ts": "ebe23326adc12cf1674c3a5cef27d2c0c28d0ebf05649077f3421c0b88b3eccb",
+    "src/sources/web.ts": "85de74c869237caf3d85578a859b563886206da615e04d59e4ae2bf9bed4fdba",
+    "src/state/index.ts": "ac463419a0ca4e6175a451dfe49fa3779e2291004d25cf4150a4470d88231e2d",
+    "src/util.ts": "04d1cda490059559358882d0cf376a45f8807c0ce08e4eb879d5b28dc9cde2b0",
+    "src/validation/index.ts": "66c7ebdd8ccfa6a39c1130c9091adc9178d26f683a87762064513c062a593439",
+    "tests/agent.test.ts": "a33afc0d84ded674e79bf2a9d2ce303af6cb45b3ad6cf35f73c49312af9a4e8a",
+    "tests/browser.test.ts": "3b05215323859e4a4043ff78a0af946a72159fcd48367197c2707c6f9aa83dca",
+    "tests/core.test.ts": "4ea66568a8c670a13e91d496225ec8216852e0e8806fa678a3de63d786c49711",
+    "tests/images.test.ts": "1a19cca4d5c8374fd560a003ce6eb612c01eb007937a448415ae70fa73238094",
+    "tests/provider.test.ts": "03760d5713c5844e4d6b6dcb6b81cda0c42f1b65c75548ee4ea7d2fcc310de3e",
+    "tests/tools.test.ts": "c32d93493b94a4a8a2ea44bc6c8a6076ead327ce7275b879bcf43b6bc364326a",
+    "tests/validation.test.ts": "0b094aa87182cc95eed6a8fefc31d54d35ee900fd2196ff78be3a4868f857a0e",
+    "tsconfig.json": "d72ff0131bffee7efdcfbf8dd415f4538ea1935ce18a0c52605930a57a9d3815",
+    "tsconfig.validation.json": "348a3c2db0deb4581cac958dbd7d3f7c8d263ecd7ad64a460d696a9f035dfb2f"
+  },
+  "limitations": [
+    "Claude reasoning and image interpretation use deterministic/mock adapters in tests; no real enterprise model evaluation",
+    "No real enterprise SSO or live GitHub/Gitea/GitLab publication round trip",
+    "Video is an actual browser screencast of a synthetic local wiki fixture; it is not a BK web UI or an autonomous live-model demonstration"
+  ]
+}

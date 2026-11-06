@@ -1,0 +1,68 @@
+
+> @jk2k/bk@0.2.0 prepack
+> npm run build
+
+
+> @jk2k/bk@0.2.0 build
+> tsc
+
+jk2k-bk-0.2.0.tgz
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm notice
+npm notice 📦  @jk2k/bk@0.2.0
+npm notice Tarball Contents
+npm notice 9.8kB README.md
+npm notice 291B dist/agent/evidence-tools.d.ts
+npm notice 2.5kB dist/agent/evidence-tools.js
+npm notice 3.9kB dist/agent/index.d.ts
+npm notice 5.1kB dist/agent/index.js
+npm notice 1.0kB dist/agent/runtime.d.ts
+npm notice 4.2kB dist/agent/runtime.js
+npm notice 562B dist/browser/index.d.ts
+npm notice 2.9kB dist/browser/index.js
+npm notice 2.9kB dist/browser/session.d.ts
+npm notice 8.8kB dist/browser/session.js
+npm notice 31B dist/cli/index.d.ts
+npm notice 11.4kB dist/cli/index.js
+npm notice 5.9kB dist/config/index.d.ts
+npm notice 9.4kB dist/config/index.js
+npm notice 2.5kB dist/knowledge/images.d.ts
+npm notice 5.7kB dist/knowledge/images.js
+npm notice 2.5kB dist/knowledge/index.d.ts
+npm notice 6.0kB dist/knowledge/index.js
+npm notice 302B dist/knowledge/retrieval.d.ts
+npm notice 2.8kB dist/knowledge/retrieval.js
+npm notice 1.2kB dist/review/index.d.ts
+npm notice 7.6kB dist/review/index.js
+npm notice 576B dist/review/provider.d.ts
+npm notice 4.6kB dist/review/provider.js
+npm notice 722B dist/scheduler/index.d.ts
+npm notice 13.8kB dist/scheduler/index.js
+npm notice 500B dist/sources/assets.d.ts
+npm notice 3.1kB dist/sources/assets.js
+npm notice 830B dist/sources/git.d.ts
+npm notice 4.4kB dist/sources/git.js
+npm notice 714B dist/sources/web.d.ts
+npm notice 10.4kB dist/sources/web.js
+npm notice 325B dist/state/index.d.ts
+npm notice 2.9kB dist/state/index.js
+npm notice 582B dist/util.d.ts
+npm notice 3.5kB dist/util.js
+npm notice 193B dist/validation/index.d.ts
+npm notice 1.7kB dist/validation/index.js
+npm notice 29.6kB docs/01-PRD.md
+npm notice 46.6kB docs/02-TECHNICAL-DESIGN.md
+npm notice 5.4kB docs/IMPLEMENTATION.md
+npm notice 3.9kB docs/VALIDATION-GAPS.md
+npm notice 1.7kB package.json
+npm notice Tarball Details
+npm notice name: @jk2k/bk
+npm notice version: 0.2.0
+npm notice filename: jk2k-bk-0.2.0.tgz
+npm notice package size: 75.9 kB
+npm notice unpacked size: 233.4 kB
+npm notice shasum: bf3851705b4603313e052a8d84d7caf66f929177
+npm notice integrity: sha512-99+ZDK5vgdRE6[...]SPUGBvmR7X5zQ==
+npm notice total files: 44
+npm notice

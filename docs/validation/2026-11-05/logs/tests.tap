@@ -1,0 +1,262 @@
+TAP version 13
+# Subtest: rule index matches source anchors, renamed paths and Chinese text, then follows related IDs
+ok 1 - rule index matches source anchors, renamed paths and Chinese text, then follows related IDs
+  ---
+  duration_ms: 34.605786
+  type: 'test'
+  ...
+# Subtest: SDK runtime disables shell/project settings and only permits explicit read-only tools
+ok 2 - SDK runtime disables shell/project settings and only permits explicit read-only tools
+  ---
+  duration_ms: 40.628042
+  type: 'test'
+  ...
+# Subtest: Claude adapter registers bounded evidence tools and blocks restricted transmission before any SDK call
+ok 3 - Claude adapter registers bounded evidence tools and blocks restricted transmission before any SDK call
+  ---
+  duration_ms: 21.743897
+  type: 'test'
+  ...
+# Subtest: public source cannot leak related internal approved rules to a model
+ok 4 - public source cannot leak related internal approved rules to a model
+  ---
+  duration_ms: 1.319942
+  type: 'test'
+  ...
+# Subtest: SDK errors and malformed structured outputs fail closed
+ok 5 - SDK errors and malformed structured outputs fail closed
+  ---
+  duration_ms: 10.383116
+  type: 'test'
+  ...
+# Subtest: image-bearing source actions require human clarification even with a textual quote
+ok 6 - image-bearing source actions require human clarification even with a textual quote
+  ---
+  duration_ms: 4.318697
+  type: 'test'
+  ...
+# Subtest: shared SDK runtime serializes exploration, vision and analysis calls under one agent limit
+ok 7 - shared SDK runtime serializes exploration, vision and analysis calls under one agent limit
+  ---
+  duration_ms: 40.417916
+  type: 'test'
+  ...
+# Subtest: browser: visible JS content, normalized snapshots, unchanged hash and page limits
+ok 8 - browser: visible JS content, normalized snapshots, unchanged hash and page limits
+  ---
+  duration_ms: 1590.634142
+  type: 'test'
+  ...
+# Subtest: browser: readonly controls, verified recipe replay, form blocking and network write interception
+ok 9 - browser: readonly controls, verified recipe replay, form blocking and network write interception
+  ---
+  duration_ms: 903.196365
+  type: 'test'
+  ...
+# Subtest: browser: profile cookies persist and expired authentication never becomes unchanged
+ok 10 - browser: profile cookies persist and expired authentication never becomes unchanged
+  ---
+  duration_ms: 623.805789
+  type: 'test'
+  ...
+# Subtest: browser: off-host redirect is blocked before destination navigation
+ok 11 - browser: off-host redirect is blocked before destination navigation
+  ---
+  duration_ms: 316.264122
+  type: 'test'
+  ...
+# Subtest: browser: image bytes changing at the same URL trigger a new immutable source revision
+ok 12 - browser: image bytes changing at the same URL trigger a new immutable source revision
+  ---
+  duration_ms: 736.115313
+  type: 'test'
+  ...
+# Subtest: browser: sync exploration drafts a replay-verified recipe while scan-only never calls a model
+ok 13 - browser: sync exploration drafts a replay-verified recipe while scan-only never calls a model
+  ---
+  duration_ms: 845.264634
+  type: 'test'
+  ...
+# Subtest: browser: disappearing navigation link retains earlier page snapshots
+ok 14 - browser: disappearing navigation link retains earlier page snapshots
+  ---
+  duration_ms: 820.65433
+  type: 'test'
+  ...
+# Subtest: strict config rejects unknown keys, duplicates, invalid durations and automatic merge
+ok 15 - strict config rejects unknown keys, duplicates, invalid durations and automatic merge
+  ---
+  duration_ms: 4.818704
+  type: 'test'
+  ...
+# Subtest: config cannot follow symlink output directories
+ok 16 - config cannot follow symlink output directories
+  ---
+  duration_ms: 120.004935
+  type: 'test'
+  ...
+# Subtest: repository lock excludes concurrent writers and releases
+ok 17 - repository lock excludes concurrent writers and releases
+  ---
+  duration_ms: 5.845482
+  type: 'test'
+  ...
+# Subtest: Git scans first import, modifications, renames and deletions
+ok 18 - Git scans first import, modifications, renames and deletions
+  ---
+  duration_ms: 464.734466
+  type: 'test'
+  ...
+# Subtest: whitespace changes are retained because whitespace can carry business meaning
+ok 19 - whitespace changes are retained because whitespace can carry business meaning
+  ---
+  duration_ms: 241.519954
+  type: 'test'
+  ...
+# Subtest: force push is detected and requires reconfirmation
+ok 20 - force push is detected and requires reconfirmation
+  ---
+  duration_ms: 334.258468
+  type: 'test'
+  ...
+# Subtest: evidence must reference exact source, revision and verbatim content
+ok 21 - evidence must reference exact source, revision and verbatim content
+  ---
+  duration_ms: 4.299335
+  type: 'test'
+  ...
+# Subtest: code and test evidence cannot approve a rule
+ok 22 - code and test evidence cannot approve a rule
+  ---
+  duration_ms: 0.486368
+  type: 'test'
+  ...
+# Subtest: uncertain or unknown-effective rules become clarification reports
+ok 23 - uncertain or unknown-effective rules become clarification reports
+  ---
+  duration_ms: 0.528839
+  type: 'test'
+  ...
+# Subtest: stale before statement is rejected and manual text is preserved by rendering
+ok 24 - stale before statement is rejected and manual text is preserved by rendering
+  ---
+  duration_ms: 7.342473
+  type: 'test'
+  ...
+# Subtest: SQLite transactions roll back and interrupted analysis recovers
+ok 25 - SQLite transactions roll back and interrupted analysis recovers
+  ---
+  duration_ms: 28.21558
+  type: 'test'
+  ...
+# Subtest: scan → failed model → retry → isolated proposal → unchanged sync is idempotent
+ok 26 - scan → failed model → retry → isolated proposal → unchanged sync is idempotent
+  ---
+  duration_ms: 447.454836
+  type: 'test'
+  ...
+# Subtest: dry run leaves jobs pending and creates no branch or proposal
+ok 27 - dry run leaves jobs pending and creates no branch or proposal
+  ---
+  duration_ms: 324.119611
+  type: 'test'
+  ...
+# Subtest: CLI init preserves existing content and exposes useful commands
+ok 28 - CLI init preserves existing content and exposes useful commands
+  ---
+  duration_ms: 5657.830468
+  type: 'test'
+  ...
+# Subtest: analysis cache is tied to model and approved knowledge revision
+ok 29 - analysis cache is tied to model and approved knowledge revision
+  ---
+  duration_ms: 562.132853
+  type: 'test'
+  ...
+# Subtest: newly restricted source policy blocks previously queued public snapshots before model transmission
+ok 30 - newly restricted source policy blocks previously queued public snapshots before model transmission
+  ---
+  duration_ms: 349.045929
+  type: 'test'
+  ...
+# Subtest: visual IR validates graph references and emits actual Mermaid through the parser
+ok 31 - visual IR validates graph references and emits actual Mermaid through the parser
+  ---
+  duration_ms: 786.391569
+  type: 'test'
+  ...
+# Subtest: charts emit tables and UI/photos never invent a relationship graph
+ok 32 - charts emit tables and UI/photos never invent a relationship graph
+  ---
+  duration_ms: 1.060948
+  type: 'test'
+  ...
+# Subtest: image inference caches by content/model version and verification uncertainty remains explicit
+ok 33 - image inference caches by content/model version and verification uncertainty remains explicit
+  ---
+  duration_ms: 144.602947
+  type: 'test'
+  ...
+# Subtest: vision resumes a saved intermediate result when a run budget expires before verification
+ok 34 - vision resumes a saved intermediate result when a run budget expires before verification
+  ---
+  duration_ms: 44.878318
+  type: 'test'
+  ...
+# Subtest: gh: create, discover duplicate, and reconcile review states
+ok 35 - gh: create, discover duplicate, and reconcile review states
+  ---
+  duration_ms: 21.753823
+  type: 'test'
+  ...
+# Subtest: glab: create, discover duplicate, and reconcile review states
+ok 36 - glab: create, discover duplicate, and reconcile review states
+  ---
+  duration_ms: 19.336404
+  type: 'test'
+  ...
+# Subtest: gt: create, discover duplicate, and reconcile review states
+ok 37 - gt: create, discover duplicate, and reconcile review states
+  ---
+  duration_ms: 12.715858
+  type: 'test'
+  ...
+# Subtest: tea: create, discover duplicate, and reconcile review states
+ok 38 - tea: create, discover duplicate, and reconcile review states
+  ---
+  duration_ms: 22.801107
+  type: 'test'
+  ...
+# Subtest: actual MCP evidence server exposes only the three scoped source/knowledge tools
+ok 39 - actual MCP evidence server exposes only the three scoped source/knowledge tools
+  ---
+  duration_ms: 92.454186
+  type: 'test'
+  ...
+# Subtest: actual MCP transport denies unknown paths, oversized reads and unrelated rule access
+ok 40 - actual MCP transport denies unknown paths, oversized reads and unrelated rule access
+  ---
+  duration_ms: 17.12512
+  type: 'test'
+  ...
+# Subtest: Mermaid parser accepts valid diagrams and rejects broken syntax
+ok 41 - Mermaid parser accepts valid diagrams and rejects broken syntax
+  ---
+  duration_ms: 1333.163787
+  type: 'test'
+  ...
+# Subtest: Markdown cannot embed script or interactive Mermaid directives
+ok 42 - Markdown cannot embed script or interactive Mermaid directives
+  ---
+  duration_ms: 0.555881
+  type: 'test'
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 42
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12544.082103

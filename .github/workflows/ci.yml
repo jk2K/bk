@@ -1,0 +1,30 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get install -y ffmpeg
+      - run: npm run validate:artifacts
+        env:
+          BK_REQUIRE_BROWSER_TESTS: "1"
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bk-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .bk/validation/latest/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
