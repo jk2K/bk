@@ -88,6 +88,12 @@ await check("codex-eval-self-test", "npm", [
   "--output",
   join(out, "codex-eval-self-test.json"),
 ]);
+await check("e2e-recovery", process.execPath, [
+  "--import",
+  "tsx",
+  "scripts/e2e-recovery.ts",
+  join(out, "e2e-recovery.json"),
+]);
 const tap = await readFile(join(out, "logs/tests.tap"), "utf8");
 const metric = (name: string) =>
   Number(new RegExp("# " + name + " (\\d+)").exec(tap)?.[1] ?? NaN);

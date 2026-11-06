@@ -41,6 +41,8 @@ ${m.checks
 
 Codex SDK 公开数据集的评分器自检结果见 [JSON](codex-eval-self-test.json)。自检使用标准答案验证评分链路，实际模型分数需要单独运行评测。
 
+3. **独立进程故障恢复**：采集、分析和提交阶段分别发送 SIGKILL，另停启真实 Git TCP 端点验证网络故障。提交中断发生在实际 Git push 和模拟审核创建之后。恢复后检查仅有一个已处理事件、一个提案分支和一次模拟审核创建。watch 多次轮询并推进排除文件变更后的游标。[故障注入结果](e2e-recovery.json)
+
 ## 截图与视频
 
 [真实浏览器录屏（MP4）](browser-validation.mp4) · [实际 Recipe](browser-recipe.json)
