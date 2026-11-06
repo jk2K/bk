@@ -19,8 +19,10 @@ const time = z.string().refine((s) => {
 const id = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/);
 const base = {
   id,
+  analysis_group: id.optional(),
   role: z.enum([
     "requirement",
+    "request",
     "design",
     "implementation",
     "test",
@@ -83,6 +85,7 @@ const web = z
         include: z.array(z.string()).default(["/**"]),
         exclude: z.array(z.string()).default([]),
         wait_for: z.string().optional(),
+        pagination_selector: z.string().min(1).max(300).optional(),
         timeout_ms: z.number().int().positive().max(120000).default(30000),
       })
       .strict(),

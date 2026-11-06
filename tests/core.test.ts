@@ -460,3 +460,170 @@ test("newly restricted source policy blocks previously queued public snapshots b
     "blocked",
   );
 });
+
+test("successive rule proposals share a branch and refuse to overwrite reviewer edits", async (t) => {
+  const root = await fixture(t),
+    upstream = join(root, "source"),
+    knowledge = join(root, "knowledge");
+  await repo(upstream);
+  await repo(knowledge);
+  const c = ConfigSchema.parse({ version: 1, sources: [source(upstream)] });
+  const state = new State(knowledge);
+  t.after(() => state.close());
+  const agent = {
+    analyze: async (event: ChangeSet) => ({
+      assessment: {
+        actions: [
+          {
+            ...action(),
+            after: event.evidence[0].after,
+            evidence: [
+              {
+                locator: "prd.md",
+                revision: event.toRevision,
+                quote: event.evidence[0].after,
+              },
+            ],
+          },
+        ],
+      },
+      usage: null,
+    }),
+  };
+  const write = async (text: string) => {
+    await writeFile(join(upstream, "prd.md"), text);
+    await commit(upstream);
+    return pipeline(knowledge, c, state, { local: true }, agent);
+  };
+  assert.equal((await write("Price locks on application.")).failed, false);
+  const first = state.db.prepare("SELECT * FROM proposals").get() as any;
+  assert.equal((await write("Price locks until cancellation.")).failed, false);
+  assert.equal(
+    state.db.prepare("SELECT COUNT(*) AS n FROM proposals").get()?.n,
+    1,
+  );
+  assert.equal(
+    state.db.prepare("SELECT COUNT(*) AS n FROM proposal_events").get()?.n,
+    2,
+  );
+  assert.equal(
+    (await readRules(knowledge, c, first.branch))[0].statement,
+    "Price locks until cancellation.",
+  );
+  const file = join(
+    knowledge,
+    ".bk/proposals",
+    first.id,
+    "worktree/knowledge/marketing/PROMO-LOCK-001.md",
+  );
+  await writeFile(
+    file,
+    (await readFile(file, "utf8")) + "\nReviewer annotation.",
+  );
+  assert.equal((await write("Price locks until expiry.")).failed, true);
+  assert.match(await readFile(file, "utf8"), /Reviewer annotation/);
+  assert.equal((await readRules(knowledge, c)).length, 0);
+});
+
+test("large Git changes are queued before advancing the cursor and migration supersedes pending batches", async (t) => {
+  const root = await fixture(t),
+    upstream = join(root, "old"),
+    replacement = join(root, "new"),
+    knowledge = join(root, "knowledge");
+  await repo(upstream);
+  await repo(replacement);
+  await repo(knowledge);
+  await writeFile(join(upstream, "prd.md"), "A".repeat(210000) + "last clause");
+  const oldRevision = await commit(upstream);
+  await writeFile(
+    join(replacement, "prd.md"),
+    "Replacement repository requirement",
+  );
+  const newRevision = await commit(replacement);
+  const c = ConfigSchema.parse({ version: 1, sources: [source(upstream)] });
+  const state = new State(knowledge);
+  t.after(() => state.close());
+  assert.equal(
+    (await pipeline(knowledge, c, state, { scanOnly: true })).failed,
+    false,
+  );
+  const pending = state.pending();
+  assert.equal(pending.length, 3);
+  assert.equal(
+    pending.map((job) => JSON.parse(job.payload).evidence[0].after).join(""),
+    "A".repeat(210000) + "last clause",
+  );
+  assert.equal(state.getSource("prd").revision, oldRevision);
+  c.sources[0] = source(replacement);
+  assert.equal(
+    (await pipeline(knowledge, c, state, { scanOnly: true })).failed,
+    true,
+  );
+  const { migrateSource } = await import("../src/scheduler/migration.js");
+  migrateSource(state, c.sources[0], oldRevision);
+  assert.equal(state.pending().length, 0);
+  assert.equal(
+    (await pipeline(knowledge, c, state, { scanOnly: true })).failed,
+    false,
+  );
+  const next = JSON.parse(state.pending()[0].payload);
+  assert.equal(next.toRevision, newRevision);
+  assert.equal(next.rebased, true);
+  assert.match(next.evidence[0].after, /Replacement repository/);
+});
+
+test("joint analysis validates cross-source revision and triggering provenance", () => {
+  const related: ChangeSet = {
+    ...change,
+    id: "r",
+    source: { ...change.source, id: "implementation", role: "implementation" },
+    toRevision: "rev2",
+    evidence: [
+      { ...change.evidence[0], after: "Implementation rejects price updates." },
+    ],
+  };
+  const combined = { ...change, related: [related] };
+  const evidence = [
+    ...action().evidence,
+    {
+      sourceId: "implementation",
+      locator: "prd.md",
+      revision: "rev2",
+      quote: "Implementation rejects",
+    },
+  ];
+  const result = validateAssessment(
+    { actions: [{ ...action(), evidence }] },
+    combined,
+    [],
+  );
+  assert.match(
+    renderRule(result.actions[0], combined),
+    /source_id: implementation/,
+  );
+  assert.throws(
+    () =>
+      validateAssessment(
+        { actions: [{ ...action(), evidence: [evidence[1]] }] },
+        combined,
+        [],
+      ),
+    /triggering source/,
+  );
+  assert.throws(
+    () =>
+      validateAssessment(
+        {
+          actions: [
+            {
+              ...action(),
+              evidence: [evidence[0], { ...evidence[1], revision: "wrong" }],
+            },
+          ],
+        },
+        combined,
+        [],
+      ),
+    /Unverifiable/,
+  );
+});

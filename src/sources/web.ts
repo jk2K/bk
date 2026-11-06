@@ -137,7 +137,7 @@ export async function scanWeb(
   const c = options.config;
   await withBrowser(root, s, async (ctx) => {
     const page = await ctx.newPage();
-    let recipe = c ? await approvedRecipe(root, s, c) : null;
+
     while (queue.length) {
       const item = queue.shift()!,
         u = allowed(item.url, s);
@@ -186,6 +186,7 @@ export async function scanWeb(
             .waitFor({ timeout: s.crawl.timeout_ms });
       };
       await navigate();
+      const recipe = c ? await approvedRecipe(root, s, c, u.href) : null;
       let usedRecipe = false;
       const needsExploration =
         s.browser.interactive ||
@@ -253,8 +254,22 @@ export async function scanWeb(
       docs[u.href] = `# ${extracted.title}\n\n${body}`;
       if (Object.values(docs).join("").length > 2_000_000)
         throw new Error("Content budget exceeded");
-      if (item.depth < s.crawl.max_depth)
-        for (const link of extracted.links) {
+      if (item.depth < s.crawl.max_depth) {
+        const links = s.crawl.pagination_selector
+          ? await page
+              .locator(s.crawl.pagination_selector)
+              .filter({ visible: true })
+              .evaluateAll((elements) =>
+                elements
+                  .filter(
+                    (element): element is HTMLAnchorElement =>
+                      element instanceof HTMLAnchorElement &&
+                      element.hasAttribute("href"),
+                  )
+                  .map((anchor) => anchor.href),
+              )
+          : extracted.links;
+        for (const link of links) {
           try {
             const next = allowed(link, s);
             next.hash = "";
@@ -268,6 +283,7 @@ export async function scanWeb(
             /* external or unsupported links are not crawled */
           }
         }
+      }
     }
   });
   // Unlinked pages are retained; link disappearance is not deletion evidence.

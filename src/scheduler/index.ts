@@ -1,3 +1,5 @@
+import { sourceFingerprint } from "./migration.js";
+import { attachContext } from "./context.js";
 import { assertTransmission } from "../agent/runtime.js";
 import { interpretCached } from "../knowledge/images.js";
 import { validateMarkdown } from "../validation/index.js";
@@ -6,7 +8,7 @@ import type { Config, Source } from "../config/index.js";
 import { duration, loadConfig } from "../config/index.js";
 import { State } from "../state/index.js";
 import { hash, lock, delay, run } from "../util.js";
-import { scanGit, type ChangeSet } from "../sources/git.js";
+import { scanGitBatches, type ChangeSet } from "../sources/git.js";
 import { scanWeb } from "../sources/web.js";
 import {
   baselineRef,
@@ -31,6 +33,7 @@ export async function pipeline(
   options: Options = {},
   agent: AgentProvider = new ClaudeAgent(),
 ) {
+  const started = Date.now();
   const output: unknown[] = [];
   let modelJobs = 0;
   const claimModel = () => {
@@ -88,53 +91,72 @@ export async function pipeline(
                 ["auth_required", "needs_review"].includes(prev.status))
             )
               continue;
-            const fingerprint = hash(
-              JSON.stringify([
-                source.type,
-                source.url,
-                source.type === "git" ? source.branch : source.browser.profile,
-                source.include,
-                source.exclude,
-                source.type === "web" ? source.crawl : null,
-              ]),
-            );
+            const fingerprint = sourceFingerprint(source);
             if (prev?.revision && prev.fingerprint !== fingerprint) {
               failed = true;
               output.push({
                 source: source.id,
                 status: "migration_required",
-                error: "Source identity/scope changed; use a new source ID",
+                error:
+                  "Source identity/scope changed; run bk source migrate with the old revision",
               });
               continue;
             }
             try {
               if (source.type === "web" && pages === 0)
                 throw new Error("Run page budget exhausted");
-              const change =
+              const changes =
                 source.type === "git"
-                  ? await scanGit(root, source, prev?.revision ?? null)
-                  : await scanWeb(root, source, prev?.revision ?? null, pages, {
-                      config: c,
-                      agent: options.scanOnly ? undefined : agent,
-                      beforeExplore: claimModel,
-                      onUsage: (usage) =>
-                        state.event("browser_usage", {
-                          source: source.id,
-                          usage,
-                        }),
-                    });
+                  ? await scanGitBatches(root, source, prev?.revision ?? null)
+                  : [
+                      await scanWeb(
+                        root,
+                        source,
+                        prev?.revision ?? null,
+                        pages,
+                        {
+                          config: c,
+                          agent: options.scanOnly ? undefined : agent,
+                          beforeExplore: claimModel,
+                          onUsage: (usage) =>
+                            state.event("browser_usage", {
+                              source: source.id,
+                              usage,
+                            }),
+                        },
+                      ),
+                    ];
+              const revision = changes[0].toRevision;
+              const generation = state.db
+                .prepare(
+                  "SELECT generation,pending FROM source_generations WHERE source_id=?",
+                )
+                .get(source.id) as
+                { generation: number; pending: number } | undefined;
+              if (generation)
+                for (const change of changes) {
+                  change.id = hash(change.id + ":" + generation.generation);
+                  if (generation.pending) change.rebased = true;
+                }
               state.transaction(() => {
-                if (change.evidence.length)
+                if (generation?.pending)
                   state.db
                     .prepare(
-                      "INSERT OR IGNORE INTO changes(id,source_id,revision,payload) VALUES(?,?,?,?)",
+                      "UPDATE source_generations SET pending=0 WHERE source_id=?",
                     )
-                    .run(
-                      change.id,
-                      source.id,
-                      change.toRevision,
-                      JSON.stringify(change),
-                    );
+                    .run(source.id);
+                for (const change of changes)
+                  if (change.evidence.length)
+                    state.db
+                      .prepare(
+                        "INSERT OR IGNORE INTO changes(id,source_id,revision,payload) VALUES(?,?,?,?)",
+                      )
+                      .run(
+                        change.id,
+                        source.id,
+                        change.toRevision,
+                        JSON.stringify(change),
+                      );
                 state.db
                   .prepare(
                     "INSERT INTO sources(id,fingerprint,revision,due,status) VALUES(?,?,?,?,'ok') ON CONFLICT(id) DO UPDATE SET fingerprint=excluded.fingerprint,revision=excluded.revision,due=excluded.due,status='ok',error=NULL,attempts=0",
@@ -142,14 +164,22 @@ export async function pipeline(
                   .run(
                     source.id,
                     fingerprint,
-                    change.toRevision,
+                    revision,
                     Date.now() + duration(source.interval),
                   );
               });
               output.push({
                 source: source.id,
-                status: change.evidence.length ? "queued" : "unchanged",
-                files: change.evidence.length,
+                status: changes.some((change) => change.evidence.length)
+                  ? "queued"
+                  : "unchanged",
+                batches: changes.filter((change) => change.evidence.length)
+                  .length,
+                files: new Set(
+                  changes.flatMap((change) =>
+                    change.evidence.map((e) => e.locator),
+                  ),
+                ).size,
               });
             } catch (e: any) {
               failed = true;
@@ -204,8 +234,16 @@ export async function pipeline(
       if (count++ >= c.watch.budgets.max_agent_jobs_per_run) break;
       const change: ChangeSet = JSON.parse(job.payload);
       // Removed sources are paused; queued changes keep their original policy snapshot.
-      if (!c.sources.some((s) => s.id === change.source.id)) {
+      const currentSource = c.sources.find((s) => s.id === change.source.id);
+      if (!currentSource) {
         output.push({ change: job.id, status: "source_removed" });
+        continue;
+      }
+      if (
+        sourceFingerprint(currentSource) !== sourceFingerprint(change.source) ||
+        currentSource.role !== change.source.role
+      ) {
+        output.push({ change: job.id, status: "source_policy_changed" });
         continue;
       }
       if (!options.dryRun)
@@ -216,10 +254,8 @@ export async function pipeline(
           .run(job.id);
       try {
         assertTransmission(change.source, c);
-        assertTransmission(
-          c.sources.find((s) => s.id === change.source.id)!,
-          c,
-        );
+        assertTransmission(currentSource, c);
+        attachContext(state, change, c);
         const knowledgeRevision = (
           await run("git", ["rev-parse", await baselineRef(root, c)], root)
         ).trim();
@@ -229,7 +265,9 @@ export async function pipeline(
             job.id,
             knowledgeRevision,
             c.agent.model,
-            "assessment-prompt-v2",
+            "assessment-prompt-v3",
+            change.related?.map((event) => event.id),
+            change.feedback,
             "schema-v1",
             c.compiler.image,
           ]),
@@ -282,12 +320,23 @@ export async function pipeline(
           state.db
             .prepare("UPDATE changes SET result=?,analysis_key=? WHERE id=?")
             .run(JSON.stringify(assessment), analysisKey, job.id);
+        const rejected = (action: (typeof assessment.actions)[number]) =>
+          ["add_rule", "update_rule"].includes(action.action) &&
+          change.feedback?.some(
+            (feedback) =>
+              feedback.decision === "rejected" &&
+              feedback.ruleId === action.ruleId &&
+              feedback.statementHash === hash(action.after),
+          );
+        const reviewable = {
+          actions: assessment.actions.filter((action) => !rejected(action)),
+        };
         const proposal = await createProposal(
           root,
           c,
           state,
           change,
-          assessment,
+          reviewable,
           rules,
           !!options.local,
           !!options.dryRun,
@@ -339,7 +388,12 @@ export async function pipeline(
       }
     }
   }
-  state.event("run", { failed, output });
+  state.event("run", {
+    failed,
+    output,
+    modelJobs,
+    durationMs: Date.now() - started,
+  });
   return { failed, results: output };
 }
 export async function withPipeline<T>(

@@ -39,6 +39,8 @@ ${m.checks
 1. **真实 Git 流程**：首次来源生成提案；在隔离测试仓库模拟人工合并；来源不变时无新增模型调用；修改一条释放条件后只形成该规则与其索引的补丁；未审核版本未改正式工作树。[执行结果](pipeline-results.json) · [实际补丁](knowledge-proposal.patch)。此场景使用确定性的模型替身，不代表真实 Claude 语义判断已验证。
 2. **真实 Chromium 流程**：展开折叠条款并断言可提取；在新导航中回放 Recipe 并比较正文；通过 BK 请求策略阻断 POST，断言服务器收到 0 次写请求。此录屏没有调用模型。
 
+Codex SDK 公开数据集的评分器自检结果见 [JSON](codex-eval-self-test.json)。自检使用标准答案验证评分链路，实际模型分数需要单独运行评测。
+
 ## 截图与视频
 
 [真实浏览器录屏（MP4）](browser-validation.mp4) · [实际 Recipe](browser-recipe.json)

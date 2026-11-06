@@ -12,22 +12,33 @@ export function evidenceTools(change: ChangeSet, rules: Rule[]) {
       "source_read_evidence",
       "Read a bounded slice from the immutable scanned source snapshot, never arbitrary files.",
       {
+        sourceId: z.string().optional(),
+        revision: z.string().optional(),
         locator: z.string(),
         version: z.enum(["before", "after"]),
         offset: z.number().int().min(0).default(0),
         length: z.number().int().positive().max(12000).default(6000),
       },
       async (args) => {
-        const e = change.evidence.find((e) => e.locator === args.locator);
-        if (!e) throw new Error("Unknown evidence locator");
+        const source = [change, ...(change.related ?? [])].find(
+          (c) =>
+            c.source.id === (args.sourceId ?? change.source.id) &&
+            (!args.revision ||
+              args.revision ===
+                (args.version === "before" ? c.fromRevision : c.toRevision)) &&
+            c.evidence.some((e) => e.locator === args.locator),
+        );
+        const e = source?.evidence.find((e) => e.locator === args.locator);
+        if (!source || !e) throw new Error("Unknown evidence locator");
         const text = e[args.version];
         return result({
+          sourceId: source.source.id,
           locator: e.locator,
           revision:
-            args.version === "before" ? change.fromRevision : change.toRevision,
+            args.version === "before" ? source.fromRevision : source.toRevision,
           text: text.slice(args.offset, args.offset + args.length),
           total: text.length,
-          visualInterpretations: change.derivedImages?.filter((image) =>
+          visualInterpretations: source.derivedImages?.filter((image) =>
             e.after.includes(image.hash),
           ),
         });

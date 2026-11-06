@@ -30,6 +30,9 @@ const root = process.cwd(),
   );
 await mkdir(out, { recursive: true });
 await mkdir(join(out, "logs"), { recursive: true });
+const version = JSON.parse(
+  await readFile(join(root, "package.json"), "utf8"),
+).version;
 const started = new Date().toISOString(),
   checks: any[] = [];
 function check(name: string, command: string, args: string[]) {
@@ -76,7 +79,15 @@ await check("tests", process.execPath, [
 ]);
 await check("build", "npm", ["run", "build"]);
 await check("format", "npm", ["run", "format:check"]);
-await check("package", "npm", ["pack", "--dry-run"]);
+await check("release-check", "npm", ["run", "release:check"]);
+await check("codex-eval-self-test", "npm", [
+  "run",
+  "eval:codex",
+  "--",
+  "--self-test",
+  "--output",
+  join(out, "codex-eval-self-test.json"),
+]);
 const tap = await readFile(join(out, "logs/tests.tap"), "utf8");
 const metric = (name: string) =>
   Number(new RegExp("# " + name + " (\\d+)").exec(tap)?.[1] ?? NaN);
@@ -262,7 +273,7 @@ try {
     }
     res.setHeader("content-type", "text/html; charset=utf-8");
     res.end(
-      `<!doctype html><html><head><meta charset="utf-8"><title>BK browser validation fixture</title><style>*{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#172437;font:18px Arial,sans-serif}.banner{padding:18px 50px;background:#122238;color:white;font-size:14px;letter-spacing:1px}.layout{display:grid;grid-template-columns:1fr 320px;gap:28px;margin:40px 50px}main,aside{background:white;border:1px solid #d6dfe8;border-radius:12px;padding:28px}small{color:#62768d}h1{font-size:32px;line-height:1.2;margin:14px 0}h2{font-size:20px}.id{font-size:14px;color:#375fd0}p{line-height:1.6}details{margin:24px 0;border:1px solid #d6dfe8;padding:18px;border-radius:8px}summary{cursor:pointer;font-weight:bold}.badge{display:inline-block;background:#e6f5ed;color:#196344;padding:7px 12px;border-radius:6px;font-size:14px}button{font-size:15px;border:1px solid #c3cddd;padding:11px 14px;border-radius:6px;background:white;margin-top:15px;cursor:pointer}#result{font-size:16px;line-height:1.7;color:#314a67}.note{padding-top:20px;font-size:13px;color:#75869a}</style></head><body><div class="banner">BK 0.2 · LOCAL SOURCE-DOCUMENT FIXTURE · REAL CHROMIUM RECORDING · NO LIVE AI MODEL</div><div class="layout"><main><small>SIMULATED WIKI / MARKETING REQUIREMENTS</small><h1>Promotion price locking</h1><div class="id">PROMO-PRICE-LOCK-001</div><p>After a merchant submits an activity application, all participating SKU prices remain locked.</p><details><summary id="expand">Release conditions — expand the source clause</summary><p id="release">The price lock ends after withdrawal, approved rejection, activity exit, or activity completion.</p></details><button id="attempt-write" type="button" onclick="fetch('/write',{method:'POST'}).catch(()=>{document.body.dataset.blocked='yes'})">Exercise write-request protection</button><p class="note">This page is a test fixture, not a BK web application or a production business page. Actions are driven by the actual BrowserSession implementation.</p></main><aside><small>VALIDATION STEP</small><h2 id="stage">1 / Initial document</h2><span class="badge" id="badge">Read-only browser context</span><p id="result">The release conditions are collapsed. The test will expand them using a scoped browser tool.</p><div class="note">Model calls in this recording: 0<br>Data: synthetic fixture only</div></aside></div></body></html>`,
+      `<!doctype html><html><head><meta charset="utf-8"><title>BK browser validation fixture</title><style>*{box-sizing:border-box}body{margin:0;background:#eef2f6;color:#172437;font:18px Arial,sans-serif}.banner{padding:18px 50px;background:#122238;color:white;font-size:14px;letter-spacing:1px}.layout{display:grid;grid-template-columns:1fr 320px;gap:28px;margin:40px 50px}main,aside{background:white;border:1px solid #d6dfe8;border-radius:12px;padding:28px}small{color:#62768d}h1{font-size:32px;line-height:1.2;margin:14px 0}h2{font-size:20px}.id{font-size:14px;color:#375fd0}p{line-height:1.6}details{margin:24px 0;border:1px solid #d6dfe8;padding:18px;border-radius:8px}summary{cursor:pointer;font-weight:bold}.badge{display:inline-block;background:#e6f5ed;color:#196344;padding:7px 12px;border-radius:6px;font-size:14px}button{font-size:15px;border:1px solid #c3cddd;padding:11px 14px;border-radius:6px;background:white;margin-top:15px;cursor:pointer}#result{font-size:16px;line-height:1.7;color:#314a67}.note{padding-top:20px;font-size:13px;color:#75869a}</style></head><body><div class="banner">BK ${version} · LOCAL SOURCE-DOCUMENT FIXTURE · REAL CHROMIUM RECORDING · NO LIVE AI MODEL</div><div class="layout"><main><small>SIMULATED WIKI / MARKETING REQUIREMENTS</small><h1>Promotion price locking</h1><div class="id">PROMO-PRICE-LOCK-001</div><p>After a merchant submits an activity application, all participating SKU prices remain locked.</p><details><summary id="expand">Release conditions — expand the source clause</summary><p id="release">The price lock ends after withdrawal, approved rejection, activity exit, or activity completion.</p></details><button id="attempt-write" type="button" onclick="fetch('/write',{method:'POST'}).catch(()=>{document.body.dataset.blocked='yes'})">Exercise write-request protection</button><p class="note">This page is a test fixture, not a BK web application or a production business page. Actions are driven by the actual BrowserSession implementation.</p></main><aside><small>VALIDATION STEP</small><h2 id="stage">1 / Initial document</h2><span class="badge" id="badge">Read-only browser context</span><p id="result">The release conditions are collapsed. The test will expand them using a scoped browser tool.</p><div class="note">Model calls in this recording: 0<br>Data: synthetic fixture only</div></aside></div></body></html>`,
     );
   });
   server.listen(0, "127.0.0.1");
@@ -453,6 +464,7 @@ async function walk(dir: string) {
 await walk("src");
 await walk("tests");
 await walk("scripts");
+await walk("evaluation");
 sourceFiles.push(
   "package.json",
   "package-lock.json",

@@ -22,6 +22,7 @@ export const ActionSchema = z
       .array(
         z
           .object({
+            sourceId: z.string().optional(),
             locator: z.string(),
             revision: z.string(),
             quote: z.string().min(1).max(3000),
@@ -79,6 +80,28 @@ export async function readRules(
   }
   return result;
 }
+function resolveEvidence(
+  change: ChangeSet,
+  e: Assessment["actions"][number]["evidence"][number],
+) {
+  const candidates = [change, ...(change.related ?? [])].filter(
+    (c) => c.source.id === (e.sourceId ?? change.source.id),
+  );
+  for (const source of candidates) {
+    const version: "before" | "after" | undefined =
+      e.revision === source.toRevision
+        ? "after"
+        : e.revision === source.fromRevision
+          ? "before"
+          : undefined;
+    if (!version) continue;
+    const doc = source.evidence.find(
+      (d) => d.locator === e.locator && d[version].includes(e.quote),
+    );
+    if (doc) return { source, doc, version };
+  }
+  throw new Error(`Unverifiable evidence: ${e.locator}`);
+}
 export function validateAssessment(
   raw: unknown,
   change: ChangeSet,
@@ -96,35 +119,21 @@ export function validateAssessment(
       throw new Error(`Invalid new rule: ${a.ruleId}`);
     if (a.action === "update_rule" && !a.after.trim())
       throw new Error("Empty update");
-    for (const e of a.evidence) {
-      const doc = change.evidence.find((d) => d.locator === e.locator);
-      if (
-        !doc ||
-        !(
-          (e.revision === change.toRevision && doc.after.includes(e.quote)) ||
-          (e.revision === change.fromRevision && doc.before.includes(e.quote))
-        )
-      )
-        throw new Error(`Unverifiable evidence: ${e.locator}`);
-    }
+    const references = a.evidence.map((e) => resolveEvidence(change, e));
+    if (!references.some((r) => r.source === change))
+      throw new Error("Action must cite the triggering source event");
     if (
-      (change.source.role === "implementation" ||
-        change.source.role === "test" ||
-        change.rebased) &&
-      ["add_rule", "update_rule"].includes(a.action)
+      ["add_rule", "update_rule"].includes(a.action) &&
+      (change.rebased ||
+        ["implementation", "test", "request"].includes(change.source.role) ||
+        !references.some((r) => r.source === change && r.version === "after"))
     ) {
       a.action = "conflict";
       a.uncertainty.push(
-        "Implementation/test evidence or rebased history cannot independently approve business intent",
+        "Current approved intent cannot be inferred from code, tests, open requests, historical or rewritten evidence alone",
       );
     }
-    if (
-      a.evidence.some((e) =>
-        change.evidence
-          .find((doc) => doc.locator === e.locator)
-          ?.after.includes("IMAGE SHA256 "),
-      )
-    ) {
+    if (references.some((r) => r.doc[r.version].includes("IMAGE SHA256 "))) {
       a.uncertainty.push(
         "Visual evidence is a derived interpretation requiring human verification",
       );
@@ -143,17 +152,17 @@ export function renderRule(
   change: ChangeSet,
   old?: Rule,
 ): string {
-  const sources = a.evidence.map((e) => ({
-    source_id: change.source.id,
-    kind: change.source.role,
-    locator: e.locator,
-    revision: e.revision,
-    content_hash:
-      e.revision === change.fromRevision
-        ? change.evidence.find((d) => d.locator === e.locator)!.beforeHash
-        : change.evidence.find((d) => d.locator === e.locator)!.afterHash,
-    quote: e.quote,
-  }));
+  const sources = a.evidence.map((e) => {
+    const { source, doc, version } = resolveEvidence(change, e);
+    return {
+      source_id: source.source.id,
+      kind: source.source.role,
+      locator: e.locator,
+      revision: e.revision,
+      content_hash: version === "before" ? doc.beforeHash : doc.afterHash,
+      quote: e.quote,
+    };
+  });
   const meta = {
     ...old?.meta,
     id: a.ruleId,
@@ -166,7 +175,11 @@ export function renderRule(
     business_effective_status: a.businessEffectiveStatus,
     sources: [
       ...(old?.meta.sources ?? []).filter(
-        (s: any) => s.source_id !== change.source.id,
+        (s: any) =>
+          !sources.some(
+            (source) =>
+              source.source_id === s.source_id && source.locator === s.locator,
+          ),
       ),
       ...sources,
     ],
@@ -178,7 +191,7 @@ export function renderRule(
         .replace(/^---\n[\s\S]*?\n---\n/, "")
         .replace(
           /<!-- bk:statement -->\n[\s\S]*?\n<!-- \/bk:statement -->/,
-          `<!-- bk:statement -->\n${a.after}\n<!-- /bk:statement -->`,
+          () => `<!-- bk:statement -->\n${a.after}\n<!-- /bk:statement -->`,
         )
     : `\n# ${a.summary}\n\n<!-- bk:statement -->\n${a.after}\n<!-- /bk:statement -->\n`;
   return `---\n${stringify(meta)}---\n${body}`;

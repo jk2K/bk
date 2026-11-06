@@ -6,6 +6,9 @@ import { mkdir, writeFile, readFile, access, readdir } from "node:fs/promises";
 import { stringify } from "yaml";
 import { defaultYaml, loadConfig, ConfigSchema } from "../config/index.js";
 import { run, redact } from "../util.js";
+import { migrateSource } from "../scheduler/migration.js";
+import { metrics } from "../state/metrics.js";
+import { proposeRecipe } from "../browser/publication.js";
 import { State } from "../state/index.js";
 import { pipeline, watch, withPipeline } from "../scheduler/index.js";
 import { browserLogin, withBrowser, allowed } from "../browser/index.js";
@@ -14,7 +17,7 @@ import { readRules } from "../knowledge/index.js";
 const program = new Command()
   .name("bk")
   .description("Git-native business knowledge evolution")
-  .version("0.2.0")
+  .version("0.3.0")
   .option("-C, --cwd <path>", "Knowledge repository", ".")
   .option("--json", "Machine-readable JSON");
 const root = () => resolve(program.opts().cwd);
@@ -200,7 +203,59 @@ source
       });
     emit({ id, status: "ok" });
   });
+source
+  .command("migrate")
+  .argument("<id>")
+  .requiredOption("--from <revision>", "Previous scanned revision")
+  .action(async (id, options) => {
+    emit(
+      await withPipeline(root(), async (state) => {
+        const config = await loadConfig(root()),
+          next = config.sources.find((s) => s.id === id);
+        if (!next) throw new Error("Unknown source");
+        migrateSource(state, next, options.from);
+        return {
+          id,
+          status: "migration_pending",
+          previousRevision: options.from,
+        };
+      }),
+    );
+  });
+program.command("metrics").action(() => {
+  const state = new State(root());
+  try {
+    emit(metrics(state));
+  } finally {
+    state.close();
+  }
+});
 const browser = program.command("browser");
+browser
+  .command("propose-recipe")
+  .argument("<id>")
+  .argument("[url]")
+  .option("--local")
+  .option("--dry-run")
+  .action(async (id, url, options) => {
+    emit(
+      await withPipeline(root(), async (state) => {
+        const config = await loadConfig(root()),
+          source = config.sources.find((s) => s.id === id);
+        if (!source || source.type !== "web")
+          throw new Error("Unknown web source");
+        return proposeRecipe(
+          root(),
+          config,
+          state,
+          source,
+          url ?? source.url,
+          !!options.local,
+          !!options.dryRun,
+        );
+      }),
+    );
+  });
 for (const kind of ["login", "status"])
   browser
     .command(kind)

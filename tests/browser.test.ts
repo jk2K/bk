@@ -33,7 +33,8 @@ async function fixture(t: any) {
   await run("git", ["init", "-b", "main"], root);
   await writeFile(join(root, ".gitignore"), ".bk/\n");
   let image = Buffer.from(png),
-    writes = 0;
+    writes = 0,
+    escaped = 0;
   let linked = true;
   const server = createServer((req, res) => {
     if (req.method === "POST") {
@@ -47,10 +48,13 @@ async function fixture(t: any) {
       return;
     }
     if (req.url === "/escape") {
-      res.writeHead(302, { location: "http://localhost:9/offsite" });
+      res.writeHead(302, {
+        location: `http://localhost:${(server.address() as any).port}/offsite`,
+      });
       res.end();
       return;
     }
+    if (req.url === "/offsite") escaped++;
     if (req.url === "/image.png") {
       res.writeHead(200, {
         "content-type": "image/png",
@@ -61,7 +65,7 @@ async function fixture(t: any) {
     }
     res.setHeader("content-type", "text/html");
     res.end(
-      `<html><head><title>Business PRD</title></head><body><main><p>Base pricing rule is immutable.</p><details><summary id="expand">Price conditions</summary><p>Withdraw the application to unlock the price.</p></details><div style="display:none">HIDDEN-SECRET</div><textarea>PRIVATE-TEXTAREA</textarea><button id="readonly" type="button" onclick="document.querySelector('#dynamic').textContent='Loaded readonly content'">Tab</button><span id="dynamic"></span><form><button id="submit" role="tab">Delete</button></form><button type="button" id="write" onclick="fetch('/mutate',{method:'POST'}).catch(()=>{document.body.dataset.blocked='yes'})">Write</button>${req.url === "/images" ? '<img src="/image.png" alt="flow">' : ""}${req.url === "/" && linked ? '<a href="/linked">Related PRD</a>' : ""}</main><script>document.querySelector('#dynamic').textContent='JS rendered pricing text';</script></body></html>`,
+      `<html><head><title>Business PRD</title></head><body><main><p>Base pricing rule is immutable.</p><details><summary id="expand">Price conditions</summary><p>Withdraw the application to unlock the price.</p></details><div style="display:none">HIDDEN-SECRET</div><textarea>PRIVATE-TEXTAREA</textarea><button id="readonly" type="button" onclick="document.querySelector('#dynamic').textContent='Loaded readonly content'">Tab</button><span id="dynamic"></span><form><button id="submit" role="tab">Delete</button></form><button type="button" id="write" onclick="fetch('/mutate',{method:'POST'}).catch(()=>{document.body.dataset.blocked='yes'})">Write</button>${req.url === "/images" ? '<img src="/image.png" alt="flow">' : ""}${req.url === "/" && linked ? '<a href="/linked" rel="next">Related PRD</a>' : ""}${req.url === "/pagination" ? '<a href="/linked" rel="next">Next page</a><a href="/unrelated">Unrelated</a>' : ""}</main><script>document.querySelector('#dynamic').textContent='JS rendered pricing text';</script></body></html>`,
     );
   });
   server.listen(0, "127.0.0.1");
@@ -97,6 +101,7 @@ async function fixture(t: any) {
       image = Buffer.concat([png, Buffer.from("updated")]);
     },
     writes: () => writes,
+    escaped: () => escaped,
     removeLink: () => {
       linked = false;
     },
@@ -221,6 +226,7 @@ test(
     const f = await fixture(t),
       { source } = f.make("/escape");
     await assert.rejects(() => scanWeb(f.root, source, null, 5));
+    assert.equal(f.escaped(), 0);
   },
 );
 test(
@@ -290,5 +296,85 @@ test(
       ),
     );
     assert.ok(persisted[`http://${f.host}/linked`]);
+  },
+);
+
+test(
+  "pagination follows the configured visible anchor and Recipe publication stays in an isolated proposal",
+  { skip: !available },
+  async (t) => {
+    const f = await fixture(t),
+      { source, c } = f.make("/pagination");
+    source.crawl.max_depth = 1;
+    source.crawl.pagination_selector = 'a[rel="next"]';
+    const scanned = await scanWeb(f.root, source, null, 2);
+    assert.deepEqual(
+      scanned.evidence.map((e) => new URL(e.locator).pathname),
+      ["/pagination", "/linked"],
+    );
+    await run(
+      "git",
+      ["-c", "user.name=Test", "-c", "user.email=test@example.com", "add", "."],
+      f.root,
+    );
+    await run(
+      "git",
+      [
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.com",
+        "commit",
+        "-m",
+        "fixture",
+      ],
+      f.root,
+    );
+    const { hash } = await import("../src/util.js");
+    const { State } = await import("../src/state/index.js");
+    const { proposeRecipe } = await import("../src/browser/publication.js");
+    const directory = join(f.root, ".bk/recipe-drafts", source.id);
+    await mkdir(directory, { recursive: true });
+    const recipe = await withBrowser(f.root, source, async (ctx) => {
+      const page = await ctx.newPage();
+      await page.goto(source.url);
+      const session = new BrowserSession(page, source);
+      await session.perform({ action: "click", selector: "#expand" });
+      return session.recipe();
+    });
+    await writeFile(
+      join(directory, hash(source.url) + ".json"),
+      JSON.stringify(recipe),
+    );
+    const state = new State(f.root);
+    t.after(() => state.close());
+    const result = await proposeRecipe(
+      f.root,
+      c,
+      state,
+      source,
+      source.url,
+      true,
+      false,
+    );
+    assert.equal(result.status, "local");
+    const proposal = state.db.prepare("SELECT branch FROM proposals").get() as {
+      branch: string;
+    };
+    assert.match(
+      await run(
+        "git",
+        [
+          "show",
+          `${proposal.branch}:recipes/${source.id}/${hash(source.url)}.json`,
+        ],
+        f.root,
+      ),
+      /#expand/,
+    );
+    assert.equal(
+      (await run("git", ["status", "--porcelain"], f.root)).trim(),
+      "",
+    );
   },
 );

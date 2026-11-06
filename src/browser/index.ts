@@ -85,6 +85,7 @@ export async function browserLogin(root: string, s: WebSource) {
 }
 
 export async function installReadonlyPolicy(ctx: BrowserContext, s: WebSource) {
+  await ctx.routeWebSocket("**/*", (socket) => socket.close());
   await ctx.route("**/*", async (route) => {
     const req = route.request();
     try {
@@ -96,7 +97,31 @@ export async function installReadonlyPolicy(ctx: BrowserContext, s: WebSource) {
         throw new Error("Navigation outside source scope");
       if (!["GET", "HEAD", "OPTIONS"].includes(req.method()))
         throw new Error("Write request blocked");
-      await route.continue();
+      const response = await route.fetch({
+        maxRedirects: 0,
+        timeout: s.crawl.timeout_ms,
+      });
+      try {
+        if (
+          response.status() >= 300 &&
+          response.status() < 400 &&
+          response.headers().location
+        ) {
+          const location = new URL(response.headers().location, u);
+          const login =
+            s.browser.login_url &&
+            location.href === new URL(s.browser.login_url).href;
+          await route.fulfill({
+            status: login ? 403 : 502,
+            contentType: "text/plain",
+            body: "Automatic redirect blocked. Configure the canonical document URL.",
+          });
+        } else {
+          await route.fulfill({ response });
+        }
+      } finally {
+        await response.dispose();
+      }
     } catch {
       await route.abort();
     }

@@ -264,19 +264,38 @@ export async function replayRecipe(
   for (const step of recipe.steps) await session.perform(step);
   return recipe;
 }
+export function recipePath(source: WebSource, url: string) {
+  return `recipes/${source.id}/${hash(url)}.json`;
+}
 export async function approvedRecipe(
   root: string,
   source: WebSource,
   c: Config,
+  url = source.url,
 ): Promise<Recipe | null> {
-  if (!source.browser.recipe) return null;
-  safePath(root, source.browser.recipe);
-  if (!source.browser.recipe.startsWith("recipes/"))
+  const explicit = url === source.url ? source.browser.recipe : undefined;
+  const canonical = recipePath(source, url);
+  const revision = await baselineRef(root, c);
+  if (!explicit) {
+    try {
+      await run("git", ["rev-parse", "--verify", revision], root);
+    } catch {
+      return null;
+    }
+  }
+  const published = (
+    await run(
+      "git",
+      ["ls-tree", "--name-only", revision, "--", canonical],
+      root,
+    )
+  ).trim();
+  const path = published ? canonical : explicit;
+  if (!path) return null;
+  safePath(root, path);
+  if (!path.startsWith("recipes/"))
     throw new Error("Approved recipes must be under recipes/");
-  const raw = await run(
-    "git",
-    ["show", `${await baselineRef(root, c)}:${source.browser.recipe}`],
-    root,
+  return RecipeSchema.parse(
+    JSON.parse(await run("git", ["show", `${revision}:${path}`], root)),
   );
-  return RecipeSchema.parse(JSON.parse(raw));
 }

@@ -1,6 +1,6 @@
 {
   "name": "@jk2k/bk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Git-native business knowledge evolution CLI",
   "directories": {
     "doc": "docs",
@@ -15,7 +15,9 @@
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"scripts/**/*.ts\"",
     "validate:artifacts": "node --import tsx scripts/validate-artifacts.ts",
-    "typecheck:validation": "tsc --noEmit -p tsconfig.validation.json"
+    "typecheck:validation": "tsc --noEmit -p tsconfig.validation.json",
+    "eval:codex": "node --import tsx scripts/eval-codex.ts",
+    "release:check": "node --import tsx scripts/release-check.ts"
   },
   "keywords": [],
   "author": "",
@@ -51,7 +53,9 @@
     "docs/01-PRD.md",
     "docs/02-TECHNICAL-DESIGN.md",
     "docs/IMPLEMENTATION.md",
-    "docs/VALIDATION-GAPS.md"
+    "docs/VALIDATION-GAPS.md",
+    "CHANGELOG.md",
+    "docs/RELEASE.md"
   ],
   "engines": {
     "node": ">=24.0.0"
@@ -59,5 +63,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/jk2K/bk.git"
-  }
+  },
+  "private": true
 }

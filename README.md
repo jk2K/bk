@@ -2,7 +2,7 @@
 
 Git 原生业务知识自动演进 CLI。监听 Git 与网页来源，提出可追溯的业务规则变更，由人工审核后进入正式知识库。
 
-**当前为 0.2 开发预览版**。已打通 Git → Claude Agent SDK → 证据校验 → 隔离 worktree → 本地提案 / Draft PR 的核心链路。完整需求与设计分别见 [PRD](docs/01-PRD.md) 和 [技术设计](docs/02-TECHNICAL-DESIGN.md)；功能边界与验证情况见 [实现状态](docs/IMPLEMENTATION.md)。
+**当前为 0.3 开发预览版**。已打通 Git → Claude Agent SDK → 证据校验 → 隔离 worktree → 本地提案 / Draft PR 的核心链路。完整需求与设计分别见 [PRD](docs/01-PRD.md) 和 [技术设计](docs/02-TECHNICAL-DESIGN.md)；功能边界与验证情况见 [实现状态](docs/IMPLEMENTATION.md)。
 
 ## 开发与安装
 
@@ -43,6 +43,7 @@ sources:
   - id: product-prd
     type: git
     role: requirement
+    analysis_group: product
     url: /absolute/path/to/prd-repository
     branch: main
     include: ["**/*.md"]
@@ -51,7 +52,9 @@ sources:
     data_classification: public
 ```
 
-支持 `requirement`、`design`、`implementation`、`test`、`external-policy` 五种证据角色。源码或测试独立提出的规则写入会被降级为冲突报告，不能直接替代批准的业务意图。修改来源 URL、分支或范围时请使用新来源 ID；当前不提供自动检查点迁移。
+角色包括 `requirement`、`design`、`implementation`、`test`、`request`、`external-policy`。源码、测试和开放需求可以提供证据，独立触发的规则写入会转为冲突报告。为有关联的来源设置相同的 `analysis_group`，分析时会选取已扫描的最新版本并校验跨来源引用。
+
+修改来源 URL、分支或扫描范围后，用 `bk source migrate <id> --from <旧扫描版本>` 确认迁移。历史审核保留，旧待办停止消费，新范围第一次扫描进入待确认流程。用 `bk metrics --json` 查看待办、审核状态、事件时序和已有模型用量。
 
 ## 执行
 
@@ -107,6 +110,7 @@ sources:
       exclude: ["/business/admin/**"]
       max_depth: 2
       max_pages: 30
+      pagination_selector: "a[rel=next]"
       wait_for: main
 ```
 
@@ -134,11 +138,11 @@ agent:
 #   readonly_selectors: ["#requirements-tab", "input[type=search]"]
 ```
 
-可用工具为正文快照、允许控件的点击/搜索、滚动和遮盖表单字段的视口截图。拒绝表单提交按钮、任意文件读取、任意 JavaScript、Shell 以及超出来源范围的导航。点击导致文档 URL 变化会阻断任务；多页抓取由普通爬取器管理，暂不支持 Agent 任意跳页。
+可用工具为正文快照、允许控件的点击/搜索、滚动和遮盖表单字段的视口截图。拒绝表单提交按钮、任意文件读取、任意 JavaScript、Shell 以及超出来源范围的导航。点击导致文档 URL 变化会阻断任务。扫描器可用 `pagination_selector` 仅跟随匹配的可见链接，仍执行 URL、深度和页数限制。自动重定向会被阻断，请配置实际目标 URL。
 
 `bk scan` 始终不调用模型。`bk sync` 才会按配置进行智能展开，随后提取可见正文并形成不可变快照；`bk analyze` 消费这些已有快照，不重新访问页面。隐藏内容和表单字段不会被当成可见正文。标记为需要交互的来源如果没有可用的正式 Recipe，`scan` 会明确要求运行 `sync`，不会把未展开内容误记为已删除。
 
-成功操作记录为结构化 Recipe，先在新导航上实际回放并比较正文，再保存至 `.bk/recipe-drafts/<source-id>/`。人工检查后，将文件放入知识仓库的 `recipes/` 并通过普通 Git 审核提交，再设置 `browser.recipe: recipes/wiki.json`。只执行目标正式分支已提交的 Recipe，不读取未提交修改，不执行任意脚本。URL、来源范围或控件白名单变化会使旧 Recipe 失效；失效后可降级重新探索。
+成功操作记录为结构化 Recipe，先实际回放并比较正文，再保存至 `.bk/recipe-drafts/<source-id>/`。`bk browser propose-recipe <source-id> [url] --dry-run` 可预览审核，移除 `--dry-run` 后生成独立提案。扫描器仅从目标正式分支读取已合并的 Recipe。URL、来源范围或控件白名单变化后，旧 Recipe 会失效，可重新探索并发起审核。
 
 ### 图片与规则关联
 
@@ -177,7 +181,7 @@ review:
 
 为知识仓库配置 `origin` 并完成平台 CLI 登录。BK 创建独立分支和待审核 PR/MR，按分支查询以避免远程成功、本地失败后重复创建。不会自动合并。重跑会查询审核状态，只有确认合并提交包含在目标分支时才记录发布。读取远程最新正式规则不会检出或覆盖用户工作树。
 
-目前按来源变更事件隔离提案；多个事件连续更新同一规则时可能产生需要人工处理的分支冲突，还没有实现跨事件的同规则 PR 合并更新。
+同一批准基线上的连续事件会复用同规则的待审分支或 PR。正式基线前进、多个待审提案重叠或待审分支有人修改时，BK 暂停自动更新并保留待办。远程审核合并或关闭后，会记录结论供后续分析参考，并抑制完全相同的被拒规则正文。
 
 ## 校验与测试
 
@@ -185,13 +189,18 @@ review:
 npm run typecheck
 npm test
 npm run build
-npm pack --dry-run
+npm run release:check
+npm run eval:codex -- --self-test
 bk validate
 ```
 
 测试使用本地真实 Git 仓库验证新增、修改、重命名、删除、强推、持久检查点、模型失败重试、干运行、提案去重及用户工作区隔离。平台 CLI 使用契约模拟测试；不将其等同于真实平台联调。Claude SDK 禁用任意内置工具与项目设置，只注册来源、规则和受限浏览工具。浏览器集成测试会启动真实 Chromium；推理测试使用可替换 SDK 测试适配器，尚未验证真实企业模型。
 
 CI 会安装 Chromium 并要求浏览器测试实际执行。本机已有 Chromium 时可用 `BK_CHROMIUM_EXECUTABLE_PATH=/path/to/chromium npm test`；容器确有需要时显式设置 `BK_CHROMIUM_NO_SANDBOX=1`。分析缓存会随模型、正式知识 Commit 或提示词/Schema 版本失效。
+
+## Codex 评测
+
+[真实来源评测集](evaluation/README.md) 包含固定版本的 Codex SDK 源码、SDK 文档和开放需求 Issue。评分器支持导入预测和显式调用真实模型。模型质量需依据实际评测结果。
 
 ## 验证产物与剩余工作
 

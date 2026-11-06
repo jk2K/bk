@@ -12,6 +12,10 @@ export class State {
   CREATE TABLE IF NOT EXISTS sources(id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, revision TEXT, due INTEGER NOT NULL DEFAULT 0, status TEXT, error TEXT);
   CREATE TABLE IF NOT EXISTS changes(id TEXT PRIMARY KEY, source_id TEXT NOT NULL, revision TEXT NOT NULL, payload TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, retry_at INTEGER NOT NULL DEFAULT 0, result TEXT, error TEXT);
   CREATE TABLE IF NOT EXISTS proposals(id TEXT PRIMARY KEY, change_id TEXT UNIQUE NOT NULL, base TEXT NOT NULL, branch TEXT NOT NULL, status TEXT NOT NULL, report TEXT NOT NULL, remote TEXT);
+  CREATE TABLE IF NOT EXISTS source_generations(source_id TEXT PRIMARY KEY, generation INTEGER NOT NULL, pending INTEGER NOT NULL);
+  CREATE TABLE IF NOT EXISTS proposal_events(change_id TEXT PRIMARY KEY, proposal_id TEXT NOT NULL REFERENCES proposals(id));
+  CREATE TABLE IF NOT EXISTS proposal_rules(proposal_id TEXT NOT NULL REFERENCES proposals(id), rule_id TEXT NOT NULL, head TEXT, PRIMARY KEY(proposal_id,rule_id));
+  CREATE TABLE IF NOT EXISTS review_feedback(proposal_id TEXT PRIMARY KEY REFERENCES proposals(id), decision TEXT NOT NULL, payload TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS history(id INTEGER PRIMARY KEY, at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, kind TEXT NOT NULL, payload TEXT NOT NULL);`);
     this.transaction(() => {
       if (
